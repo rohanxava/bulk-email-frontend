@@ -19,7 +19,7 @@ if (process.env.SENDGRID_API_KEY) {
   console.warn('SENDGRID_API_KEY is not set. Email sending will be disabled.');
 }
 
-export const SendCampaignInputSchema = z.object({
+const SendCampaignInputSchema = z.object({
   subject: z.string().describe('The subject line of the email.'),
   htmlContent: z.string().describe('The HTML content of the email.'),
   csvContent: z.string().describe('The content of the contacts CSV file.'),
@@ -27,7 +27,7 @@ export const SendCampaignInputSchema = z.object({
 });
 export type SendCampaignInput = z.infer<typeof SendCampaignInputSchema>;
 
-export const SendCampaignOutputSchema = z.object({
+const SendCampaignOutputSchema = z.object({
   success: z.boolean(),
   emailsSent: z.number(),
   error: z.string().optional(),
