@@ -41,12 +41,14 @@ export default function LoginPage() {
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" required />
             </div>
-            <Button type="submit" className="w-full">
-              Login
+            <Button asChild className="w-full">
+              <Link href="/dashboard">Login</Link>
             </Button>
-            <Button variant="outline" className="w-full">
-              <GoogleIcon className="mr-2 h-4 w-4" />
-              Sign in with Google
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/dashboard">
+                <GoogleIcon className="mr-2 h-4 w-4" />
+                Sign in with Google
+              </Link>
             </Button>
           </div>
           <div className="mt-4 text-center text-sm">
