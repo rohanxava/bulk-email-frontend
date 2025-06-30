@@ -1,4 +1,5 @@
 
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusCircle, Settings } from 'lucide-react';
@@ -14,9 +15,11 @@ export default async function ProjectsPage() {
         title="Projects"
         description="Manage your projects and their SendGrid API keys."
       >
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Project
+        <Button asChild>
+          <Link href="/dashboard/projects/new">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            New Project
+          </Link>
         </Button>
       </PageHeader>
       {projects && projects.length > 0 ? (

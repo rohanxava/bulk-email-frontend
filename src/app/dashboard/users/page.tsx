@@ -1,4 +1,5 @@
 
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -24,9 +25,11 @@ export default async function UsersPage() {
         title="User Management"
         description="Manage platform users and their roles (Super Admin view)."
       >
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New User
+        <Button asChild>
+          <Link href="/dashboard/users/new">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            New User
+          </Link>
         </Button>
       </PageHeader>
       <Card>
