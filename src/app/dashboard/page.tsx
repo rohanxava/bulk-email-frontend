@@ -6,8 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
-import { ChartTooltipContent } from '@/components/ui/chart';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
+import { ChartContainer, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { PageHeader } from './page-header';
 
 const chartData = [
@@ -18,6 +18,17 @@ const chartData = [
   { name: 'May', desktop: 209, mobile: 130 },
   { name: 'Jun', desktop: 214, mobile: 140 },
 ];
+
+const chartConfig = {
+  desktop: {
+    label: 'Desktop',
+    color: 'hsl(var(--primary))',
+  },
+  mobile: {
+    label: 'Mobile',
+    color: 'hsl(var(--secondary))',
+  },
+} satisfies ChartConfig;
 
 export default function DashboardPage() {
   return (
@@ -70,17 +81,17 @@ export default function DashboardPage() {
             <CardTitle>Campaign Performance</CardTitle>
             <CardDescription>Monthly open rates by device</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
+          <CardContent className="h-[350px]">
+            <ChartContainer config={chartConfig}>
+              <BarChart accessibilityLayer data={chartData}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false}/>
                 <YAxis />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="desktop" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="mobile" fill="var(--color-secondary)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
+                <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
               </BarChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>

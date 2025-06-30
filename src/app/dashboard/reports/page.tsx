@@ -1,8 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ChartTooltipContent } from '@/components/ui/chart';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { ChartContainer, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { PageHeader } from '../page-header';
 
 const reportData = [
@@ -21,6 +21,17 @@ const chartData = [
   { date: 'Jul 29', opens: 1890, clicks: 4800 },
 ];
 
+const chartConfig = {
+  opens: {
+    label: "Opens",
+    color: "hsl(var(--primary))",
+  },
+  clicks: {
+    label: "Clicks",
+    color: "hsl(var(--accent))",
+  },
+} satisfies ChartConfig;
+
 export default function ReportsPage() {
   return (
     <div>
@@ -33,17 +44,17 @@ export default function ReportsPage() {
           <CardTitle>Performance Over Time</CardTitle>
           <CardDescription>Opens and Clicks in the last 30 days.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
+        <CardContent className="h-[300px]">
+          <ChartContainer config={chartConfig}>
+            <LineChart accessibilityLayer data={chartData}>
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
               <YAxis />
               <Tooltip content={<ChartTooltipContent />} />
-              <Line type="monotone" dataKey="opens" stroke="hsl(var(--primary))" activeDot={{ r: 8 }} />
-              <Line type="monotone" dataKey="clicks" stroke="hsl(var(--accent))" />
+              <Line type="monotone" dataKey="opens" stroke="var(--color-opens)" activeDot={{ r: 8 }} />
+              <Line type="monotone" dataKey="clicks" stroke="var(--color-clicks)" />
             </LineChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         </CardContent>
       </Card>
       <Card>
