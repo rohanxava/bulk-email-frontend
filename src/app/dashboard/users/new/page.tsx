@@ -9,14 +9,17 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageHeader } from '../../page-header';
 import { useToast } from '@/hooks/use-toast';
+import { sendInvitationEmail } from '@/ai/flows/send-invitation-email';
+import { Loader2 } from 'lucide-react';
 
 export default function NewUserPage() {
   const [fullName, setFullName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [role, setRole] = React.useState('');
+  const [isSending, setIsSending] = React.useState(false);
   const { toast } = useToast();
 
-  const handleSendInvitation = () => {
+  const handleSendInvitation = async () => {
     if (!fullName || !email || !role) {
       toast({
         title: 'Missing Information',
@@ -25,15 +28,41 @@ export default function NewUserPage() {
       });
       return;
     }
-    // TODO: Implement actual user creation logic
-    toast({
-      title: 'Invitation Sent',
-      description: `An invitation has been sent to ${email}.`,
-    });
-    // Clear form
-    setFullName('');
-    setEmail('');
-    setRole('');
+
+    setIsSending(true);
+    try {
+      const result = await sendInvitationEmail({
+        name: fullName,
+        email,
+        role,
+      });
+
+      if (result.success) {
+        toast({
+          title: 'Invitation Sent',
+          description: `An invitation with login credentials has been sent to ${email}.`,
+        });
+        // Clear form on success
+        setFullName('');
+        setEmail('');
+        setRole('');
+      } else {
+        toast({
+          title: 'Error Sending Invitation',
+          description: result.error || 'An unknown error occurred.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+       console.error('Failed to send invitation:', error);
+       toast({
+        title: 'Error',
+        description: 'An unexpected error occurred. Please check the console.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
 
 
@@ -58,6 +87,7 @@ export default function NewUserPage() {
               placeholder="e.g., Jane Doe" 
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
+              disabled={isSending}
             />
           </div>
           <div className="space-y-2">
@@ -68,21 +98,25 @@ export default function NewUserPage() {
               placeholder="e.g., jane@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isSending}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
-             <Select value={role} onValueChange={setRole}>
+             <Select value={role} onValueChange={setRole} disabled={isSending}>
                 <SelectTrigger id="role">
                     <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="super-admin">Super Admin</SelectItem>
+                    <SelectItem value="User">User</SelectItem>
+                    <SelectItem value="Super Admin">Super Admin</SelectItem>
                 </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleSendInvitation}>Send Invitation</Button>
+          <Button onClick={handleSendInvitation} disabled={isSending}>
+            {isSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Send Invitation
+          </Button>
         </CardContent>
       </Card>
     </div>
