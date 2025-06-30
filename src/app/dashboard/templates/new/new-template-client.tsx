@@ -101,8 +101,13 @@ export function NewTemplateClient({ projects }: NewTemplateClientProps) {
                 <DialogHeader>
                   <DialogTitle>HTML Preview</DialogTitle>
                 </DialogHeader>
-                <div className="flex-1 border rounded-md overflow-auto p-4">
-                   <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+                <div className="flex-1 border rounded-md overflow-hidden">
+                  <iframe
+                    srcDoc={htmlContent}
+                    className="w-full h-full border-none"
+                    title="HTML Preview"
+                    sandbox="allow-scripts"
+                  />
                 </div>
               </DialogContent>
             </Dialog>
