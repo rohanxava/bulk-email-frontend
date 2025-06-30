@@ -1,0 +1,91 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { ChartTooltipContent } from '@/components/ui/chart';
+import { PageHeader } from '../page-header';
+
+const reportData = [
+  { name: 'Q3 Product Update', sent: 5230, delivered: 5201, opens: 1872, clicks: 312 },
+  { name: 'Summer Sale Kickoff', sent: 15000, delivered: 14890, opens: 4318, clicks: 982 },
+  { name: 'Weekly Newsletter #128', sent: 8942, delivered: 8899, opens: 2135, clicks: 445 },
+  { name: 'Weekly Newsletter #127', sent: 8930, delivered: 8901, opens: 2210, clicks: 450 },
+  { name: 'Weekly Newsletter #126', sent: 8915, delivered: 8880, opens: 2190, clicks: 435 },
+];
+
+const chartData = [
+  { date: 'Jul 1', opens: 4000, clicks: 2400 },
+  { date: 'Jul 8', opens: 3000, clicks: 1398 },
+  { date: 'Jul 15', opens: 2000, clicks: 9800 },
+  { date: 'Jul 22', opens: 2780, clicks: 3908 },
+  { date: 'Jul 29', opens: 1890, clicks: 4800 },
+];
+
+export default function ReportsPage() {
+  return (
+    <div>
+      <PageHeader
+        title="Reports & Analytics"
+        description="Analyze the performance of your email campaigns."
+      />
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Performance Over Time</CardTitle>
+          <CardDescription>Opens and Clicks in the last 30 days.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip content={<ChartTooltipContent />} />
+              <Line type="monotone" dataKey="opens" stroke="hsl(var(--primary))" activeDot={{ r: 8 }} />
+              <Line type="monotone" dataKey="clicks" stroke="hsl(var(--accent))" />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Campaign Reports</CardTitle>
+          <CardDescription>Detailed breakdown of recent campaigns.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Campaign</TableHead>
+                <TableHead>Delivered</TableHead>
+                <TableHead>Opens</TableHead>
+                <TableHead>Clicks</TableHead>
+                <TableHead>Open Rate</TableHead>
+                <TableHead>Click Rate</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {reportData.map((report, index) => {
+                const openRate = ((report.opens / report.delivered) * 100).toFixed(1) + '%';
+                const clickRate = ((report.clicks / report.opens) * 100).toFixed(1) + '%';
+                return (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{report.name}</TableCell>
+                    <TableCell>{report.delivered.toLocaleString()}</TableCell>
+                    <TableCell>{report.opens.toLocaleString()}</TableCell>
+                    <TableCell>{report.clicks.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{openRate}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{clickRate}</Badge>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
