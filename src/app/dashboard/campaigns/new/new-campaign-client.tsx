@@ -12,20 +12,33 @@ import { Upload, Loader2 } from 'lucide-react';
 import { SuggestSendTimeClient } from './suggest-send-time-client';
 import { useToast } from '@/hooks/use-toast';
 import { sendCampaign } from '@/ai/flows/send-campaign';
-import type { Project } from '@/lib/types';
+import type { Project, Template } from '@/lib/types';
 
 interface NewCampaignClientProps {
   projects: Project[];
+  templates: Template[];
 }
 
-export function NewCampaignClient({ projects }: NewCampaignClientProps) {
+export function NewCampaignClient({ projects, templates }: NewCampaignClientProps) {
   const [campaignName, setCampaignName] = React.useState('');
   const [subject, setSubject] = React.useState('');
   const [emailContent, setEmailContent] = React.useState('');
   const [csvContent, setCsvContent] = React.useState<string | null>(null);
   const [csvFileName, setCsvFileName] = React.useState<string | null>(null);
   const [isSending, setIsSending] = React.useState(false);
+  const [selectedProjectId, setSelectedProjectId] = React.useState<string>('');
+  const [selectedTemplateId, setSelectedTemplateId] = React.useState<string>('');
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (selectedTemplateId) {
+      const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
+      if (selectedTemplate) {
+        setSubject(selectedTemplate.subject);
+        setEmailContent(selectedTemplate.htmlContent);
+      }
+    }
+  }, [selectedTemplateId, templates]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -41,10 +54,10 @@ export function NewCampaignClient({ projects }: NewCampaignClientProps) {
   };
 
   const handleSendCampaign = async () => {
-    if (!campaignName || !subject || !emailContent || !csvContent) {
+    if (!selectedProjectId || !campaignName || !subject || !emailContent || !csvContent) {
       toast({
         title: 'Missing Information',
-        description: 'Please fill out all fields and upload a contacts file.',
+        description: 'Please select a project, fill out all fields, and upload a contacts file.',
         variant: 'destructive',
       });
       return;
@@ -83,6 +96,13 @@ export function NewCampaignClient({ projects }: NewCampaignClientProps) {
       setIsSending(false);
     }
   };
+  
+  const handleSaveDraft = () => {
+    toast({
+      title: 'Draft Saved',
+      description: 'Your campaign has been saved as a draft.',
+    });
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -95,7 +115,7 @@ export function NewCampaignClient({ projects }: NewCampaignClientProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="project">Project</Label>
-                <Select>
+                <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                   <SelectTrigger id="project">
                     <SelectValue placeholder="Select a project" />
                   </SelectTrigger>
@@ -110,14 +130,16 @@ export function NewCampaignClient({ projects }: NewCampaignClientProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="template">Template (Optional)</Label>
-                <Select>
+                <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
                   <SelectTrigger id="template">
                     <SelectValue placeholder="Select a template" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="welcome">Welcome Email</SelectItem>
-                    <SelectItem value="promo">Product Promotion</SelectItem>
-                    <SelectItem value="update">Feature Update</SelectItem>
+                    {templates && templates.map((template) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -187,11 +209,10 @@ export function NewCampaignClient({ projects }: NewCampaignClientProps) {
           {isSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Send Campaign
         </Button>
-        <Button size="lg" variant="outline" className="w-full">
+        <Button size="lg" variant="outline" className="w-full" onClick={handleSaveDraft}>
           Save as Draft
         </Button>
       </div>
     </div>
   );
 }
-

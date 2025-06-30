@@ -20,10 +20,12 @@ export interface Template {
   name: string;
   category: string;
   lastUpdated: string; // Date string
+  subject: string;
+  htmlContent: string;
 }
 
 export interface Campaign {
-  id: string;
+  id:string;
   name: string;
   status: 'Sent' | 'Active' | 'Draft' | 'Failed';
   recipients: number | 'Ongoing';
