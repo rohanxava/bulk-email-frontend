@@ -1,16 +1,14 @@
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { PageHeader } from '../page-header';
+import { getTemplates } from '@/services/api';
+import { format } from 'date-fns';
 
-const templates = [
-  { name: 'Welcome Email', category: 'Onboarding', lastUpdated: '2024-07-18' },
-  { name: 'Product Promotion', category: 'Marketing', lastUpdated: '2024-07-12' },
-  { name: 'Feature Update', category: 'Announcements', lastUpdated: '2024-07-05' },
-  { name: 'Password Reset', category: 'Transactional', lastUpdated: '2024-06-28' },
-];
+export default async function TemplatesPage() {
+  const templates = await getTemplates();
 
-export default function TemplatesPage() {
   return (
     <div>
       <PageHeader
@@ -22,21 +20,29 @@ export default function TemplatesPage() {
           New Template
         </Button>
       </PageHeader>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {templates.map((template, index) => (
-          <Card key={index}>
-            <CardHeader>
-              <CardTitle className="text-lg">{template.name}</CardTitle>
-              <CardDescription>{template.category}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                Last updated: {template.lastUpdated}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+       {templates && templates.length > 0 ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {templates.map((template) => (
+            <Card key={template.id}>
+              <CardHeader>
+                <CardTitle className="text-lg">{template.name}</CardTitle>
+                <CardDescription>{template.category}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">
+                  Last updated: {format(new Date(template.lastUpdated), 'PPP')}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-muted-foreground">No templates found. Create one to get started!</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
