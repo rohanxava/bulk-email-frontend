@@ -29,5 +29,6 @@ export interface Campaign {
   name: string;
   status: 'Sent' | 'Active' | 'Draft' | 'Failed';
   recipients: number | 'Ongoing';
-  sentDate: string; // Date string or 'N/A'
+  createdBy: string;
+  createdDate: string; // Date string or 'N/A'
 }

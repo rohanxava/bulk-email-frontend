@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle } from 'lucide-react';
 import { PageHeader } from '../page-header';
 import { getCampaigns } from '@/services/api';
+import { format } from 'date-fns';
 
 const statusVariant = {
   Sent: 'default',
@@ -43,7 +44,8 @@ export default async function CampaignsPage() {
                 <TableHead>Campaign Name</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Recipients</TableHead>
-                <TableHead>Sent Date</TableHead>
+                <TableHead>Created By</TableHead>
+                <TableHead>Created Date</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -57,12 +59,17 @@ export default async function CampaignsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>{typeof campaign.recipients === 'number' ? campaign.recipients.toLocaleString() : campaign.recipients}</TableCell>
-                    <TableCell>{campaign.sentDate}</TableCell>
+                    <TableCell>{campaign.createdBy}</TableCell>
+                    <TableCell>
+                      {campaign.createdDate === 'N/A'
+                        ? 'N/A'
+                        : format(new Date(campaign.createdDate), 'PPP')}
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">
+                  <TableCell colSpan={5} className="text-center">
                     No campaigns found.
                   </TableCell>
                 </TableRow>

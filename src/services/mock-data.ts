@@ -24,9 +24,9 @@ export const mockTemplates: Template[] = [
 ];
 
 export const mockCampaigns: Campaign[] = [
-  { id: 'camp_1', name: 'Q3 Product Update', status: 'Sent', recipients: 5230, sentDate: '2024-07-20' },
-  { id: 'camp_2', name: 'Summer Sale Kickoff', status: 'Sent', recipients: 15000, sentDate: '2024-07-15' },
-  { id: 'camp_3', name: 'Welcome Series - Email 1', status: 'Active', recipients: 'Ongoing', sentDate: '2024-07-01' },
-  { id: 'camp_4', name: 'New Feature Announcement', status: 'Draft', recipients: 0, sentDate: 'N/A' },
-  { id: 'camp_5', name: 'Weekly Newsletter #128', status: 'Sent', recipients: 8942, sentDate: '2024-07-18' },
+  { id: 'camp_1', name: 'Q3 Product Update', status: 'Sent', recipients: 5230, createdBy: 'Sanchit Kakkar', createdDate: '2024-07-20' },
+  { id: 'camp_2', name: 'Summer Sale Kickoff', status: 'Sent', recipients: 15000, createdBy: 'Jane Doe', createdDate: '2024-07-15' },
+  { id: 'camp_3', name: 'Welcome Series - Email 1', status: 'Active', recipients: 'Ongoing', createdBy: 'Sanchit Kakkar', createdDate: '2024-07-01' },
+  { id: 'camp_4', name: 'New Feature Announcement', status: 'Draft', recipients: 0, createdBy: 'Emily White', createdDate: 'N/A' },
+  { id: 'camp_5', name: 'Weekly Newsletter #128', status: 'Sent', recipients: 8942, createdBy: 'Jane Doe', createdDate: '2024-07-18' },
 ];
