@@ -10,13 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PageHeader } from '../../page-header';
 import { useToast } from '@/hooks/use-toast';
 import { sendInvitationEmail } from '@/ai/flows/send-invitation-email';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function NewUserPage() {
   const [fullName, setFullName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [role, setRole] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [showPassword, setShowPassword] = React.useState(false);
   const [isSending, setIsSending] = React.useState(false);
   const { toast } = useToast();
 
@@ -100,20 +101,32 @@ export default function NewUserPage() {
               type="email" 
               placeholder="e.g., jane@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.g.t.value)}
               disabled={isSending}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              placeholder="Enter a secure password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isSending}
-            />
+            <div className="relative">
+              <Input 
+                id="password" 
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter a secure password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isSending}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                disabled={isSending}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
