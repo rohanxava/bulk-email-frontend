@@ -1,4 +1,5 @@
 
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
@@ -15,9 +16,11 @@ export default async function TemplatesPage() {
         title="Email Templates"
         description="Create and manage reusable email templates."
       >
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Template
+        <Button asChild>
+          <Link href="/dashboard/templates/new">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            New Template
+          </Link>
         </Button>
       </PageHeader>
        {templates && templates.length > 0 ? (
