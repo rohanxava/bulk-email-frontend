@@ -16,11 +16,12 @@ export default function NewUserPage() {
   const [fullName, setFullName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [role, setRole] = React.useState('');
+  const [password, setPassword] = React.useState('');
   const [isSending, setIsSending] = React.useState(false);
   const { toast } = useToast();
 
   const handleSendInvitation = async () => {
-    if (!fullName || !email || !role) {
+    if (!fullName || !email || !role || !password) {
       toast({
         title: 'Missing Information',
         description: 'Please fill out all fields.',
@@ -35,6 +36,7 @@ export default function NewUserPage() {
         name: fullName,
         email,
         role,
+        password,
       });
 
       if (result.success) {
@@ -46,6 +48,7 @@ export default function NewUserPage() {
         setFullName('');
         setEmail('');
         setRole('');
+        setPassword('');
       } else {
         toast({
           title: 'Error Sending Invitation',
@@ -98,6 +101,17 @@ export default function NewUserPage() {
               placeholder="e.g., jane@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isSending}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input 
+              id="password" 
+              type="password" 
+              placeholder="Enter a secure password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               disabled={isSending}
             />
           </div>

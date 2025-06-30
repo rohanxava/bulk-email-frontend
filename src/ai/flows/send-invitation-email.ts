@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow for sending user invitation emails.
@@ -22,6 +23,7 @@ const SendInvitationEmailInputSchema = z.object({
   name: z.string().describe("The full name of the new user."),
   email: z.string().email().describe("The email address of the new user."),
   role: z.string().describe("The assigned role for the new user."),
+  password: z.string().describe("The password for the new user."),
 });
 export type SendInvitationEmailInput = z.infer<typeof SendInvitationEmailInputSchema>;
 
@@ -35,16 +37,6 @@ export async function sendInvitationEmail(input: SendInvitationEmailInput): Prom
   return sendInvitationEmailFlow(input);
 }
 
-function generateTemporaryPassword(length = 12) {
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
-    let password = "";
-    for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * charset.length);
-        password += charset[randomIndex];
-    }
-    return password;
-}
-
 const sendInvitationEmailFlow = ai.defineFlow(
   {
     name: 'sendInvitationEmailFlow',
@@ -52,13 +44,12 @@ const sendInvitationEmailFlow = ai.defineFlow(
     outputSchema: SendInvitationEmailOutputSchema,
   },
   async (input) => {
-    const { name, email, role } = input;
+    const { name, email, role, password } = input;
 
     if (!process.env.SENDGRID_API_KEY || process.env.SENDGRID_API_KEY === 'YOUR_SENDGRID_API_KEY_HERE') {
       return { success: false, error: 'SendGrid API key not configured.' };
     }
-
-    const temporaryPassword = generateTemporaryPassword();
+    
     const fromEmail = 'no-reply@example.com'; // TODO: Use a real, verified sender email
     const loginUrl = 'http://localhost:9002/'; // TODO: Replace with your actual app URL
 
@@ -69,9 +60,9 @@ const sendInvitationEmailFlow = ai.defineFlow(
       <p>You can log in with the following credentials:</p>
       <ul>
         <li><strong>Email:</strong> ${email}</li>
-        <li><strong>Temporary Password:</strong> <code>${temporaryPassword}</code></li>
+        <li><strong>Password:</strong> <code>${password}</code></li>
       </ul>
-      <p>Please log in and change your password immediately.</p>
+      <p>Please log in and change your password if you wish.</p>
       <a href="${loginUrl}" style="display: inline-block; background-color: #3b82f6; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Login Now</a>
       <br>
       <p>If you have any questions, please contact your administrator.</p>
