@@ -8,13 +8,15 @@ import { PlusCircle } from 'lucide-react';
 import { PageHeader } from '../page-header';
 import { getCampaigns } from '@/services/api';
 import { format } from 'date-fns';
+import type { Campaign } from '@/lib/types';
 
-const statusVariant = {
-  Sent: 'default',
-  Active: 'secondary',
-  Draft: 'outline',
-  Failed: 'destructive',
-} as const;
+const statusConfig: Record<Campaign['status'], { className: string }> = {
+  Sent: { className: 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80' },
+  Active: { className: 'border-transparent bg-accent text-accent-foreground hover:bg-accent/80' },
+  Draft: { className: 'border-transparent bg-muted text-muted-foreground hover:bg-muted/80' },
+  Failed: { className: 'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80' },
+};
+
 
 export default async function CampaignsPage() {
   const campaigns = await getCampaigns();
@@ -54,7 +56,7 @@ export default async function CampaignsPage() {
                   <TableRow key={campaign.id}>
                     <TableCell className="font-medium">{campaign.name}</TableCell>
                     <TableCell>
-                      <Badge variant={statusVariant[campaign.status] || 'default'}>
+                      <Badge className={statusConfig[campaign.status]?.className}>
                         {campaign.status}
                       </Badge>
                     </TableCell>

@@ -43,12 +43,12 @@ const barChartConfig = {
 } satisfies ChartConfig;
 
 
-const statusVariant = {
-  Sent: 'default',
-  Active: 'secondary',
-  Draft: 'outline',
-  Failed: 'destructive',
-} as const;
+const statusConfig: Record<Campaign['status'], { className: string }> = {
+  Sent: { className: 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80' },
+  Active: { className: 'border-transparent bg-accent text-accent-foreground hover:bg-accent/80' },
+  Draft: { className: 'border-transparent bg-muted text-muted-foreground hover:bg-muted/80' },
+  Failed: { className: 'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80' },
+};
 
 export default function DashboardPage() {
   const [allCampaigns, setAllCampaigns] = React.useState<Campaign[]>([]);
@@ -71,8 +71,8 @@ export default function DashboardPage() {
   const campaignStatusChartConfig = {
      sent: { label: 'Sent', color: 'hsl(var(--chart-1))', icon: Circle },
      active: { label: 'Active', color: 'hsl(var(--chart-2))', icon: Circle },
-     draft: { label: 'Draft', color: 'hsl(var(--chart-3))', icon: Circle },
-     failed: { label: 'Failed', color: 'hsl(var(--chart-4))', icon: Circle },
+     draft: { label: 'Draft', color: 'hsl(var(--muted-foreground))', icon: Circle },
+     failed: { label: 'Failed', color: 'hsl(var(--destructive))', icon: Circle },
   } satisfies ChartConfig;
 
   React.useEffect(() => {
@@ -205,7 +205,7 @@ export default function DashboardPage() {
                    <Skeleton className="h-4 w-1/2 mx-auto" />
                 </div>
             ) : (
-              <div className="flex items-center justify-center gap-4 w-full">
+              <div className="flex items-center justify-center gap-4 w-full flex-wrap">
                 {Object.entries(campaignStatusChartConfig).map(([key, value]) => (
                   <div key={key} className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full" style={{backgroundColor: value.color}} />
@@ -242,7 +242,7 @@ export default function DashboardPage() {
                     <TableRow key={campaign.id}>
                       <TableCell className="font-medium">{campaign.name}</TableCell>
                       <TableCell>
-                        <Badge variant={statusVariant[campaign.status] || 'default'}>
+                        <Badge className={statusConfig[campaign.status]?.className}>
                           {campaign.status}
                         </Badge>
                       </TableCell>
