@@ -15,6 +15,11 @@ export async function getUsers(): Promise<User[]> {
   return mockUsers;
 }
 
+export async function getUserById(id: string): Promise<User | undefined> {
+  await delay(200);
+  return mockUsers.find(user => user.id === id);
+}
+
 export async function getTemplates(): Promise<Template[]> {
   await delay(200);
   return mockTemplates;

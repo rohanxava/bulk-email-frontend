@@ -78,7 +78,9 @@ export default async function UsersPage() {
                       {formatDistanceToNow(new Date(user.lastActive), { addSuffix: true })}
                     </TableCell>
                     <TableCell>
-                      <Button variant="outline" size="sm">Edit</Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/dashboard/users/${user.id}/edit`}>Edit</Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
