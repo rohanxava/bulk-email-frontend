@@ -13,9 +13,10 @@ import { Loader2 } from 'lucide-react';
 
 interface EditUserClientProps {
   user: User;
+  currentUserRole: User['role'];
 }
 
-export function EditUserClient({ user }: EditUserClientProps) {
+export function EditUserClient({ user, currentUserRole }: EditUserClientProps) {
   const [fullName, setFullName] = React.useState(user.name);
   const [email, setEmail] = React.useState(user.email);
   const [role, setRole] = React.useState(user.role);
@@ -120,20 +121,22 @@ export function EditUserClient({ user }: EditUserClientProps) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Security</CardTitle>
-          <CardDescription>
-            Manage the user's password.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Button variant="outline" onClick={handleResetPassword} disabled={isResetting}>
-                {isResetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Send Password Reset Email
-            </Button>
-        </CardContent>
-      </Card>
+      {currentUserRole === 'Super Admin' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Security</CardTitle>
+            <CardDescription>
+              Manage the user's password.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+              <Button variant="outline" onClick={handleResetPassword} disabled={isResetting}>
+                  {isResetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Send Password Reset Email
+              </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
