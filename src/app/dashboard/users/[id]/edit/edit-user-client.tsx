@@ -21,8 +21,10 @@ export function EditUserClient({ user, currentUserRole }: EditUserClientProps) {
   const [email, setEmail] = React.useState(user.email);
   const [role, setRole] = React.useState(user.role);
   const [status, setStatus] = React.useState(user.status);
+  const [newPassword, setNewPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
-  const [isResetting, setIsResetting] = React.useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = React.useState(false);
   const { toast } = useToast();
 
   const handleUpdateUser = async () => {
@@ -46,16 +48,39 @@ export function EditUserClient({ user, currentUserRole }: EditUserClientProps) {
     });
   };
   
-  const handleResetPassword = async () => {
-    setIsResetting(true);
-    // In a real app, you'd trigger a password reset flow (e.g., via email)
+  const handleUpdatePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast({
+        title: 'Missing Fields',
+        description: 'Please fill out both password fields.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: 'Passwords Do Not Match',
+        description: 'Please ensure the new passwords match.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    // In a real app, you'd make an API call to update the password
     await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsResetting(false);
-     toast({
-      title: 'Password Reset Sent',
-      description: `A password reset link has been sent to ${email}.`,
+    
+    console.log(`Password for user ${user.id} changed.`);
+
+    setIsUpdatingPassword(false);
+    setNewPassword('');
+    setConfirmPassword('');
+    toast({
+      title: 'Password Updated',
+      description: `The password for ${user.name} has been successfully changed.`,
     });
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -124,16 +149,36 @@ export function EditUserClient({ user, currentUserRole }: EditUserClientProps) {
       {currentUserRole === 'Super Admin' && (
         <Card>
           <CardHeader>
-            <CardTitle>Security</CardTitle>
+            <CardTitle>Update Password</CardTitle>
             <CardDescription>
-              Manage the user's password.
+              As a Super Admin, you can directly change this user's password.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-              <Button variant="outline" onClick={handleResetPassword} disabled={isResetting}>
-                  {isResetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Send Password Reset Email
-              </Button>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                disabled={isUpdatingPassword}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm New Password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isUpdatingPassword}
+              />
+            </div>
+            <Button onClick={handleUpdatePassword} disabled={isUpdatingPassword}>
+              {isUpdatingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Update Password
+            </Button>
           </CardContent>
         </Card>
       )}
