@@ -205,7 +205,7 @@ export function NewCampaignClient({ projects, templates }: NewCampaignClientProp
 
           </CardContent>
         </Card>
-        <Button size="lg" className="w-full bg-accent hover:bg-accent/90" onClick={handleSendCampaign} disabled={isSending}>
+        <Button size="lg" className="w-full" onClick={handleSendCampaign} disabled={isSending}>
           {isSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Send Campaign
         </Button>
