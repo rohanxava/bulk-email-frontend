@@ -154,18 +154,21 @@ export default function DashboardPage() {
             <CardTitle>Campaign Performance</CardTitle>
             <CardDescription>Monthly open rates by device</CardDescription>
           </CardHeader>
-          <CardContent className="h-[350px] pl-2">
-            <ChartContainer config={barChartConfig}>
-              <BarChart accessibilityLayer data={barChartData}>
-                <CartesianGrid vertical={false} />
-                <XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false}/>
-                <YAxis />
-                <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8} />
-                <Bar dataKey="mobile" fill="var(--color-mobile)" radius={8} />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
+          <CardContent className="h-[350px] overflow-x-auto">
+  <div className="min-w-[700px] pl-2">
+    <ChartContainer config={barChartConfig}>
+      <BarChart accessibilityLayer data={barChartData}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false}/>
+        <YAxis />
+        <Tooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8} />
+        <Bar dataKey="mobile" fill="var(--color-mobile)" radius={8} />
+      </BarChart>
+    </ChartContainer>
+  </div>
+</CardContent>
+
         </Card>
          <Card className="flex flex-col">
           <CardHeader>
