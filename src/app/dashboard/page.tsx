@@ -1,3 +1,4 @@
+
 'use client';
 import * as React from 'react';
 import Link from 'next/link';
@@ -9,16 +10,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Pie, PieChart, Cell } from 'recharts';
 import { ChartContainer, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { PageHeader } from './page-header';
 import { Button } from '@/components/ui/button';
-import { Mail, Users, MousePointerClick, ArrowUpRight, MailOpen } from 'lucide-react';
+import { Mail, Users, MousePointerClick, ArrowUpRight, MailOpen, Circle } from 'lucide-react';
 import type { Campaign } from '@/lib/types';
 import { getCampaigns } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 
-const chartData = [
+const barChartData = [
   { name: 'Jan', desktop: 186, mobile: 80 },
   { name: 'Feb', desktop: 305, mobile: 200 },
   { name: 'Mar', desktop: 237, mobile: 120 },
@@ -27,7 +31,7 @@ const chartData = [
   { name: 'Jun', desktop: 214, mobile: 140 },
 ];
 
-const chartConfig = {
+const barChartConfig = {
   desktop: {
     label: 'Desktop',
     color: 'hsl(var(--primary))',
@@ -38,27 +42,58 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+
+const statusVariant = {
+  Sent: 'default',
+  Active: 'secondary',
+  Draft: 'outline',
+  Failed: 'destructive',
+} as const;
+
 export default function DashboardPage() {
-  const [recentCampaigns, setRecentCampaigns] = React.useState<Campaign[]>([]);
+  const [allCampaigns, setAllCampaigns] = React.useState<Campaign[]>([]);
   const [loadingCampaigns, setLoadingCampaigns] = React.useState(true);
+  
+  const campaignStatusData = React.useMemo(() => {
+    if (!allCampaigns.length) return [];
+    const statusCounts = allCampaigns.reduce((acc, campaign) => {
+      acc[campaign.status] = (acc[campaign.status] || 0) + 1;
+      return acc;
+    }, {} as Record<Campaign['status'], number>);
+    
+    return Object.entries(statusCounts).map(([status, count]) => ({
+      status,
+      count,
+      fill: `var(--color-${status.toLowerCase()})`
+    }));
+  }, [allCampaigns]);
+
+  const campaignStatusChartConfig = {
+     sent: { label: 'Sent', color: 'hsl(var(--chart-1))', icon: Circle },
+     active: { label: 'Active', color: 'hsl(var(--chart-2))', icon: Circle },
+     draft: { label: 'Draft', color: 'hsl(var(--chart-3))', icon: Circle },
+     failed: { label: 'Failed', color: 'hsl(var(--chart-4))', icon: Circle },
+  } satisfies ChartConfig;
 
   React.useEffect(() => {
-    const fetchRecentCampaigns = async () => {
+    const fetchCampaignsData = async () => {
       setLoadingCampaigns(true);
       try {
         const campaigns = await getCampaigns();
-        setRecentCampaigns(campaigns.slice(0, 5));
+        setAllCampaigns(campaigns);
       } catch (error) {
         console.error("Failed to fetch campaigns", error);
       } finally {
         setLoadingCampaigns(false);
       }
     };
-    fetchRecentCampaigns();
+    fetchCampaignsData();
   }, []);
 
+  const recentCampaigns = allCampaigns.slice(0, 5);
+
   return (
-    <div>
+    <div className="flex flex-col gap-6">
       <PageHeader
         title="Dashboard"
         description="Here's a high-level overview of your marketing performance."
@@ -113,15 +148,15 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Campaign Performance</CardTitle>
             <CardDescription>Monthly open rates by device</CardDescription>
           </CardHeader>
           <CardContent className="h-[350px] pl-2">
-            <ChartContainer config={chartConfig}>
-              <BarChart accessibilityLayer data={chartData}>
+            <ChartContainer config={barChartConfig}>
+              <BarChart accessibilityLayer data={barChartData}>
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false}/>
                 <YAxis />
@@ -132,32 +167,95 @@ export default function DashboardPage() {
             </ChartContainer>
           </CardContent>
         </Card>
-        <Card>
+         <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle>Campaign Status</CardTitle>
+            <CardDescription>Breakdown of all campaign statuses.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 pb-0">
+            {loadingCampaigns ? (
+              <div className="flex items-center justify-center h-full"><Skeleton className="w-48 h-48 rounded-full" /></div>
+            ) : campaignStatusData.length > 0 ? (
+               <ChartContainer config={campaignStatusChartConfig} className="mx-auto aspect-square h-full max-h-[300px]">
+                <PieChart>
+                  <Tooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                  <Pie
+                    data={campaignStatusData}
+                    dataKey="count"
+                    nameKey="status"
+                    innerRadius={60}
+                    strokeWidth={5}
+                  >
+                    {campaignStatusData.map((entry) => (
+                      <Cell key={`cell-${entry.status}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ChartContainer>
+            ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-sm text-muted-foreground">No campaign data available.</p>
+                </div>
+            )}
+          </CardContent>
+          <CardFooter className="flex-col gap-2 text-sm pt-4">
+             {loadingCampaigns ? (
+                <div className="w-full space-y-2">
+                   <Skeleton className="h-4 w-3/4 mx-auto" />
+                   <Skeleton className="h-4 w-1/2 mx-auto" />
+                </div>
+            ) : (
+              <div className="flex items-center justify-center gap-4 w-full">
+                {Object.entries(campaignStatusChartConfig).map(([key, value]) => (
+                  <div key={key} className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full" style={{backgroundColor: value.color}} />
+                    <span className="text-muted-foreground">{value.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
+      <Card>
           <CardHeader>
             <CardTitle>Recent Campaigns</CardTitle>
             <CardDescription>Your 5 most recent campaigns.</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-6">
-            {loadingCampaigns ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                  <div key={index} className="flex items-center gap-4">
-                      <div className="grid gap-2 w-full">
-                          <Skeleton className="h-4 w-3/4" />
-                          <Skeleton className="h-4 w-1/2" />
-                      </div>
-                      <Skeleton className="h-5 w-12 ml-auto" />
-                  </div>
-              ))
+          <CardContent>
+             {loadingCampaigns ? (
+               <div className="space-y-4">
+                  {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+               </div>
             ) : recentCampaigns.length > 0 ? (
-              recentCampaigns.map((campaign) => (
-                <div key={campaign.id} className="flex items-center gap-4">
-                  <div className="grid gap-1">
-                    <p className="text-sm font-medium leading-none">{campaign.name}</p>
-                    <p className="text-sm text-muted-foreground">{campaign.status}</p>
-                  </div>
-                  <div className="ml-auto font-medium">{typeof campaign.recipients === 'number' ? `+${campaign.recipients.toLocaleString()}` : campaign.recipients}</div>
-                </div>
-              ))
+              <Table>
+                 <TableHeader>
+                    <TableRow>
+                      <TableHead>Campaign Name</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Recipients</TableHead>
+                      <TableHead>Created Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                <TableBody>
+                  {recentCampaigns.map((campaign) => (
+                    <TableRow key={campaign.id}>
+                      <TableCell className="font-medium">{campaign.name}</TableCell>
+                      <TableCell>
+                        <Badge variant={statusVariant[campaign.status] || 'default'}>
+                          {campaign.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{typeof campaign.recipients === 'number' ? campaign.recipients.toLocaleString() : campaign.recipients}</TableCell>
+                      <TableCell>
+                        {campaign.createdDate === 'N/A'
+                          ? 'N/A'
+                          : format(new Date(campaign.createdDate), 'PPP')}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             ) : (
               <p className="text-sm text-muted-foreground text-center pt-8">No recent campaigns.</p>
             )}
@@ -173,7 +271,6 @@ export default function DashboardPage() {
             </CardFooter>
            )}
         </Card>
-      </div>
     </div>
   );
 }
