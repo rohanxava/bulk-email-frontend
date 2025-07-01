@@ -3,13 +3,14 @@
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail } from 'lucide-react';
-import { register as registerUser } from '@/services/user'; // <-- your register API
-import { toast } from 'react-hot-toast';
+import { register as registerUser } from '@/services/user';
+import toast, { Toaster } from 'react-hot-toast';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
@@ -27,19 +28,25 @@ export default function SignupPage() {
   } = useForm();
 
   const onSubmit = async (data: any) => {
-  try {
-    const payload = { ...data, role: 'user' }; // add role
-    await registerUser(payload);
-    toast.success('Account created successfully');
-    router.push('/dashboard');
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || 'Registration failed');
-  }
-};
+    try {
+      const payload = { ...data, role: 'user' };
+      const res = await registerUser(payload);
+      toast.success(res.message || 'Account created successfully');
 
+      // Wait 1.5 seconds for toast to show before navigating
+      setTimeout(() => {
+        router.push('/');
+      }, 1500);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Registration failed');
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      {/* ✅ Toaster rendered locally here */}
+      <Toaster position="top-center" />
+
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center items-center mb-4">
