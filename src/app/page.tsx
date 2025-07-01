@@ -42,10 +42,10 @@ export default function LoginPage() {
               <Input id="password" type="password" required />
             </div>
             <Button asChild className="w-full">
-              <Link href="/dashboard">Login</Link>
+              <Link href="/otp">Login</Link>
             </Button>
             <Button asChild variant="outline" className="w-full">
-              <Link href="/dashboard">
+              <Link href="/otp">
                 <GoogleIcon className="mr-2 h-4 w-4" />
                 Sign in with Google
               </Link>

@@ -2,33 +2,44 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Loader2 } from 'lucide-react';
+import { Upload, Loader2, Eye, Save } from 'lucide-react';
 import { SuggestSendTimeClient } from './suggest-send-time-client';
 import { useToast } from '@/hooks/use-toast';
 import { sendCampaign } from '@/ai/flows/send-campaign';
-import type { Project, Template } from '@/lib/types';
+import { saveCampaign } from '@/services/api';
+import type { Project, Template, Campaign } from '@/lib/types';
+import * as XLSX from 'xlsx';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface NewCampaignClientProps {
   projects: Project[];
   templates: Template[];
+  initialData?: Campaign;
 }
 
-export function NewCampaignClient({ projects, templates }: NewCampaignClientProps) {
-  const [campaignName, setCampaignName] = React.useState('');
-  const [subject, setSubject] = React.useState('');
-  const [emailContent, setEmailContent] = React.useState('');
+export function NewCampaignClient({ projects, templates, initialData }: NewCampaignClientProps) {
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const [campaignId, setCampaignId] = React.useState(initialData?.id || null);
+  const [campaignName, setCampaignName] = React.useState(initialData?.name || '');
+  const [subject, setSubject] = React.useState(initialData?.subject || '');
+  const [emailContent, setEmailContent] = React.useState(initialData?.htmlContent || '');
   const [csvContent, setCsvContent] = React.useState<string | null>(null);
   const [csvFileName, setCsvFileName] = React.useState<string | null>(null);
+  
   const [isSending, setIsSending] = React.useState(false);
-  const [selectedProjectId, setSelectedProjectId] = React.useState<string>('');
+  const [isSavingDraft, setIsSavingDraft] = React.useState(false);
+
+  const [selectedProjectId, setSelectedProjectId] = React.useState<string>(''); // TODO: Link this to campaign data
   const [selectedTemplateId, setSelectedTemplateId] = React.useState<string>('');
-  const { toast } = useToast();
 
   React.useEffect(() => {
     if (selectedTemplateId) {
@@ -45,19 +56,51 @@ export function NewCampaignClient({ projects, templates }: NewCampaignClientProp
     if (file) {
       setCsvFileName(file.name);
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result;
-        setCsvContent(text as string);
-      };
-      reader.readAsText(file);
+
+      if (file.name.endsWith('.csv')) {
+        reader.onload = (e) => {
+          const text = e.target?.result;
+          setCsvContent(text as string);
+        };
+        reader.readAsText(file);
+      } else if (file.name.endsWith('.xlsx')) {
+        reader.onload = (e) => {
+          const data = e.target?.result;
+          try {
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const csv = XLSX.utils.sheet_to_csv(worksheet);
+            setCsvContent(csv);
+          } catch (error) {
+            console.error('Error parsing XLSX file:', error);
+            toast({
+              title: 'Error Parsing File',
+              description: 'Could not parse the XLSX file. Please ensure it is valid.',
+              variant: 'destructive',
+            });
+            setCsvFileName(null);
+            setCsvContent(null);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        toast({
+          title: 'Unsupported File Type',
+          description: 'Please upload a .csv or .xlsx file.',
+          variant: 'destructive',
+        });
+        setCsvFileName(null);
+        setCsvContent(null);
+      }
     }
   };
 
   const handleSendCampaign = async () => {
-    if (!selectedProjectId || !campaignName || !subject || !emailContent || !csvContent) {
+    if (!campaignName || !subject || !emailContent || !csvContent) {
       toast({
         title: 'Missing Information',
-        description: 'Please select a project, fill out all fields, and upload a contacts file.',
+        description: 'Please fill out all fields and upload a contacts file to send.',
         variant: 'destructive',
       });
       return;
@@ -69,7 +112,6 @@ export function NewCampaignClient({ projects, templates }: NewCampaignClientProp
         subject,
         htmlContent: emailContent,
         csvContent,
-        // TODO: Replace with a dynamic email from user/project settings
         fromEmail: 'no-reply@example.com',
       });
 
@@ -78,6 +120,7 @@ export function NewCampaignClient({ projects, templates }: NewCampaignClientProp
           title: 'Campaign Sent!',
           description: `${result.emailsSent} emails have been queued for sending.`,
         });
+        router.push('/dashboard/campaigns');
       } else {
         toast({
           title: 'Error Sending Campaign',
@@ -97,11 +140,34 @@ export function NewCampaignClient({ projects, templates }: NewCampaignClientProp
     }
   };
   
-  const handleSaveDraft = () => {
-    toast({
-      title: 'Draft Saved',
-      description: 'Your campaign has been saved as a draft.',
-    });
+  const handleSaveDraft = async () => {
+    if (!campaignName) {
+        toast({ title: 'Campaign Name Required', description: 'Please enter a name for your campaign to save a draft.', variant: 'destructive' });
+        return;
+    }
+    
+    setIsSavingDraft(true);
+    try {
+        await saveCampaign({
+            id: campaignId || undefined,
+            name: campaignName,
+            subject,
+            htmlContent: emailContent,
+            status: 'Draft',
+        });
+        toast({ title: 'Draft Saved', description: 'Your campaign draft has been saved.' });
+        router.push('/dashboard/campaigns?tab=draft');
+        router.refresh();
+    } catch (error) {
+       console.error('Failed to save draft:', error);
+       toast({
+        title: 'Error',
+        description: 'Could not save the draft. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingDraft(false);
+    }
   };
 
   return (
@@ -182,7 +248,7 @@ export function NewCampaignClient({ projects, templates }: NewCampaignClientProp
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="contacts-file" className="block mb-2">Upload Contacts (CSV)</Label>
+              <Label htmlFor="contacts-file" className="block mb-2">Upload Contacts (CSV or XLSX)</Label>
               <div className="flex items-center justify-center w-full">
                   <label htmlFor="contacts-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted">
                       <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-2">
@@ -192,26 +258,53 @@ export function NewCampaignClient({ projects, templates }: NewCampaignClientProp
                           ) : (
                               <>
                                   <p className="mb-1 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span></p>
-                                  <p className="text-xs text-muted-foreground">CSV file</p>
+                                  <p className="text-xs text-muted-foreground">CSV or XLSX file</p>
                               </>
                           )}
                       </div>
-                      <Input id="contacts-file" type="file" className="hidden" accept=".csv" onChange={handleFileChange} />
+                      <Input id="contacts-file" type="file" className="hidden" accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onChange={handleFileChange} />
                   </label>
               </div>
+              {initialData?.recipients === 0 || !initialData && (
+                <p className="text-xs text-muted-foreground mt-2">Upload a new contact list to send this campaign.</p>
+              )}
             </div>
             
             <SuggestSendTimeClient emailContent={emailContent} />
 
           </CardContent>
         </Card>
-        <Button size="lg" className="w-full" onClick={handleSendCampaign} disabled={isSending}>
+        <Button size="lg" className="w-full" onClick={handleSendCampaign} disabled={isSending || isSavingDraft}>
           {isSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Send Campaign
         </Button>
-        <Button size="lg" variant="outline" className="w-full" onClick={handleSaveDraft}>
-          Save as Draft
-        </Button>
+        <div className="grid grid-cols-2 gap-4">
+          <Button size="lg" variant="outline" className="w-full" onClick={handleSaveDraft} disabled={isSavingDraft || isSending}>
+            {isSavingDraft ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {campaignId ? 'Update Draft' : 'Save as Draft'}
+          </Button>
+           <Dialog>
+              <DialogTrigger asChild>
+                <Button size="lg" variant="outline" className="w-full" disabled={!emailContent.trim()}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Preview
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
+                <DialogHeader>
+                  <DialogTitle>Email Preview</DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 border rounded-md overflow-hidden">
+                  <iframe
+                    srcDoc={emailContent}
+                    className="w-full h-full border-none"
+                    title="Email Preview"
+                    sandbox="allow-scripts"
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+        </div>
       </div>
     </div>
   );
