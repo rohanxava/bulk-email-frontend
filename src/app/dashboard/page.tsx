@@ -34,7 +34,7 @@ const chartConfig = {
   },
   mobile: {
     label: 'Mobile',
-    color: 'hsl(var(--secondary))',
+    color: 'hsl(var(--accent))',
   },
 } satisfies ChartConfig;
 
@@ -67,7 +67,9 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Emails Sent</CardTitle>
-            <Mail className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Mail className="h-5 w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">12,408</div>
@@ -77,7 +79,9 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Open Rate</CardTitle>
-            <MailOpen className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 rounded-lg bg-accent/10">
+              <MailOpen className="h-5 w-5 text-accent" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">24.5%</div>
@@ -87,7 +91,9 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Click Rate</CardTitle>
-            <MousePointerClick className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 rounded-lg bg-primary/10">
+              <MousePointerClick className="h-5 w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">4.2%</div>
@@ -97,7 +103,9 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">New Subscribers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 rounded-lg bg-accent/10">
+              <Users className="h-5 w-5 text-accent" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">+1,284</div>
@@ -118,8 +126,8 @@ export default function DashboardPage() {
                 <XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false}/>
                 <YAxis />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-                <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+                <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8} />
+                <Bar dataKey="mobile" fill="var(--color-mobile)" radius={8} />
               </BarChart>
             </ChartContainer>
           </CardContent>
