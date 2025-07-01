@@ -1,3 +1,12 @@
+// services/api.js
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'http://localhost:5000/api',
+});
+
+export default api;
+  
 import { mockProjects, mockUsers, mockTemplates, mockCampaigns } from './mock-data';
 import type { Project, User, Template, Campaign } from '@/lib/types';
 

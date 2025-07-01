@@ -1,26 +1,43 @@
 'use client';
-
+ 
+import { useForm } from 'react-hook-form';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
+import { login } from '@/services/user';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail } from 'lucide-react';
-
+ 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    role="img"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
+  <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
     <title>Google</title>
     <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.62 1.9-4.72 1.9-4.26 0-7.75-3.5-7.75-7.75s3.49-7.75 7.75-7.75c2.44 0 4.01 1.02 4.9 1.9l2.73-2.73C19.01 1.02 16.12 0 12.48 0 5.88 0 .04 5.88.04 12.48s5.84 12.48 12.44 12.48c6.92 0 12-4.84 12-12.28 0-.8-.08-1.56-.2-2.28H12.48z" />
   </svg>
 );
-
-
+ 
 export default function LoginPage() {
+  const router = useRouter();
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm();
+ 
+  const onSubmit = async (data: any) => {
+    try {
+      const res = await login(data);
+      // Store token in localStorage or cookie
+      localStorage.setItem('token', res.token);
+      toast.success('Login successful');
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Login failed');
+    }
+  };
+ 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -32,25 +49,26 @@ export default function LoginPage() {
           <CardDescription>Sign in to access your dashboard</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" required />
+              <Input id="email" type="email" placeholder="m@example.com" required {...register('email')} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required />
+              <Input id="password" type="password" required {...register('password')} />
             </div>
-            <Button asChild className="w-full">
-              <Link href="/otp">Login</Link>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
             <Button asChild variant="outline" className="w-full">
-              <Link href="/otp">
+              <Link href="/dashboard">
                 <GoogleIcon className="mr-2 h-4 w-4" />
                 Sign in with Google
               </Link>
             </Button>
-          </div>
+          </form>
+ 
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{' '}
             <Link href="/signup" className="underline">
@@ -62,3 +80,5 @@ export default function LoginPage() {
     </div>
   );
 }
+ 
+ 
