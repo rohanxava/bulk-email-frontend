@@ -53,7 +53,7 @@ const [loading, setLoading] = useState(false);
 
 
 
- const handleVerify = async () => {
+  const handleVerify = async () => {
   if (otp.length !== 6) {
     toast.error('Please enter the full 6-digit OTP');
     return;

@@ -1,14 +1,52 @@
+"use client";
 
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle } from 'lucide-react';
-import { PageHeader } from '../page-header';
-import { getTemplates } from '@/services/api';
-import { format } from 'date-fns';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import { Pencil, Trash2, PlusCircle } from "lucide-react";
 
-export default async function TemplatesPage() {
-  const templates = await getTemplates();
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { PageHeader } from "../page-header";
+import { getTemplates, deleteTemplate } from "@/services/api";
+
+export default function TemplatesPage() {
+  const [templates, setTemplates] = useState([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getTemplates();
+        setTemplates(data);
+      } catch (err) {
+        console.error("Failed to load templates:", err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    const confirm = window.confirm(
+      "Are you sure you want to delete this template?"
+    );
+    if (!confirm) return;
+
+    try {
+      await deleteTemplate(id);
+      setTemplates((prev) => prev.filter((tpl: any) => tpl._id !== id));
+    } catch (err) {
+      console.error("Failed to delete template:", err);
+    }
+  };
 
   return (
     <div>
@@ -23,17 +61,38 @@ export default async function TemplatesPage() {
           </Link>
         </Button>
       </PageHeader>
-       {templates && templates.length > 0 ? (
+
+      {templates.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {templates.map((template) => (
-            <Card key={template.id}>
+          {templates.map((template: any) => (
+            <Card key={template._id} className="relative">
               <CardHeader>
+                {/* Edit & Delete Icons in top-right */}
+                <div className="absolute top-2 right-2 flex gap-2">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() =>
+                      router.push(`/dashboard/templates/${template._id}/edit`)
+                    }
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+
+                  <Button
+                    onClick={() => handleDelete(template._id)}
+                    className="bg-transparent hover:bg-red-100 p-3 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </Button>
+                </div>
+
                 <CardTitle className="text-lg">{template.name}</CardTitle>
-                <CardDescription>{template.category}</CardDescription>
+                <CardDescription>{template.subject}</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-muted-foreground">
-                  Last updated: {format(new Date(template.lastUpdated), 'PPP')}
+                  Last updated: {format(new Date(template.updatedAt), "PPP")}
                 </p>
               </CardContent>
             </Card>
@@ -42,7 +101,9 @@ export default async function TemplatesPage() {
       ) : (
         <Card>
           <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">No templates found. Create one to get started!</p>
+            <p className="text-center text-muted-foreground">
+              No templates found. Create one to get started!
+            </p>
           </CardContent>
         </Card>
       )}

@@ -1,4 +1,5 @@
-
+'use client';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,22 +12,24 @@ import { format } from 'date-fns';
 import type { Campaign } from '@/lib/types';
 
 const statusConfig: Record<Campaign['status'], { className: string }> = {
-  Sent: { className: 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80' },
-  Active: { className: 'border-transparent bg-accent text-accent-foreground hover:bg-accent/80' },
-  Draft: { className: 'border-transparent bg-muted text-muted-foreground hover:bg-muted/80' },
-  Failed: { className: 'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80' },
+  Sent: { className: 'bg-primary text-primary-foreground' },
+  Active: { className: 'bg-accent text-accent-foreground' },
+  Draft: { className: 'bg-muted text-muted-foreground' },
+  Failed: { className: 'bg-destructive text-destructive-foreground' },
 };
 
+export default function CampaignsPage() {
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
-export default async function CampaignsPage() {
-  const campaigns = await getCampaigns();
+  useEffect(() => {
+    getCampaigns()
+      .then(setCampaigns)
+      .catch((err) => console.error('Failed to fetch campaigns', err));
+  }, []);
 
   return (
     <div>
-      <PageHeader
-        title="Campaigns"
-        description="Create and manage your email campaigns."
-      >
+      <PageHeader title="Campaigns" description="Create and manage your email campaigns.">
         <Button asChild>
           <Link href="/dashboard/campaigns/new">
             <PlusCircle className="mr-2 h-4 w-4" />
@@ -37,7 +40,7 @@ export default async function CampaignsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Recent Campaigns</CardTitle>
-          <CardDescription>A list of your recent email campaigns.</CardDescription>
+          <CardDescription>List of all your campaigns.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -51,21 +54,21 @@ export default async function CampaignsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {campaigns && campaigns.length > 0 ? (
+              {campaigns.length > 0 ? (
                 campaigns.map((campaign) => (
-                  <TableRow key={campaign.id}>
+                  <TableRow key={campaign._id}>
                     <TableCell className="font-medium">{campaign.name}</TableCell>
                     <TableCell>
                       <Badge className={statusConfig[campaign.status]?.className}>
                         {campaign.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{typeof campaign.recipients === 'number' ? campaign.recipients.toLocaleString() : campaign.recipients}</TableCell>
-                    <TableCell>{campaign.createdBy}</TableCell>
+                    <TableCell>{campaign.recipients || 0}</TableCell>
+                    <TableCell>{campaign.createdBy || '-'}</TableCell>
                     <TableCell>
-                      {campaign.createdDate === 'N/A'
-                        ? 'N/A'
-                        : format(new Date(campaign.createdDate), 'PPP')}
+                      {campaign.createdDate
+                        ? format(new Date(campaign.createdDate), 'PPP')
+                        : 'N/A'}
                     </TableCell>
                   </TableRow>
                 ))

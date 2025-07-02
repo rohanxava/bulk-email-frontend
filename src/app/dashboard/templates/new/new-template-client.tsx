@@ -1,35 +1,79 @@
+"use client";
 
-'use client';
-
-import * as React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import type { Project } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
-import { Eye } from 'lucide-react';
+import * as React from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import type { Project } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
+import { Eye } from "lucide-react";
+import { createTemplate } from "@/services/api";
 
 interface NewTemplateClientProps {
   projects: Project[];
 }
 
 export function NewTemplateClient({ projects }: NewTemplateClientProps) {
-  const [projectId, setProjectId] = React.useState('');
-  const [templateName, setTemplateName] = React.useState('');
-  const [subject, setSubject] = React.useState('');
-  const [htmlContent, setHtmlContent] = React.useState('');
+  const [projectId, setProjectId] = React.useState("");
+  const [templateName, setTemplateName] = React.useState("");
+  const [subject, setSubject] = React.useState("");
+  const [htmlContent, setHtmlContent] = React.useState("");
   const { toast } = useToast();
 
-  const handleSaveTemplate = () => {
-    // TODO: Implement actual save logic
-    toast({
-      title: 'Template Saved',
-      description: 'Your new template has been saved successfully.',
-    });
+  const handleSaveTemplate = async () => {
+    if (!projectId || !templateName || !subject || !htmlContent) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill all fields before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await createTemplate({
+        name: templateName,
+        subject,
+        htmlContent,
+        projectId,
+      });
+
+      toast({
+        title: "Template Saved",
+        description: "Your new template has been saved successfully.",
+      });
+
+      // Optional: redirect or clear fields
+    } catch (error) {
+      console.error("Failed to save template", error);
+      toast({
+        title: "Error",
+        description: "Failed to save template.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -50,11 +94,12 @@ export function NewTemplateClient({ projects }: NewTemplateClientProps) {
                   <SelectValue placeholder="Select a project" />
                 </SelectTrigger>
                 <SelectContent>
-                  {projects && projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
+                  {projects &&
+                    projects.map((project) => (
+                      <SelectItem key={project._id} value={project._id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

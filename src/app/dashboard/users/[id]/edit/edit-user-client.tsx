@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import type { User } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
+import { updateUser, updateUserPassword } from '@/services/api';
 
 interface EditUserClientProps {
   user: User;
@@ -28,26 +28,30 @@ export function EditUserClient({ user, currentUserRole }: EditUserClientProps) {
   const { toast } = useToast();
 
   const handleUpdateUser = async () => {
-    setIsSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // In a real app, you would send this data to your backend API
-    console.log({
-      id: user.id,
-      fullName,
-      email,
-      role,
-      status
-    });
+    try {
+      setIsSaving(true);
+      await updateUser(user.id, {
+        name: fullName,
+        email,
+        role,
+        status,
+      });
 
-    setIsSaving(false);
-    toast({
-      title: 'User Updated',
-      description: `${fullName}'s details have been saved.`,
-    });
+      toast({
+        title: 'User Updated',
+        description: `${fullName}'s details have been saved.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Update Failed',
+        description: 'Failed to update user details.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
-  
+
   const handleUpdatePassword = async () => {
     if (!newPassword || !confirmPassword) {
       toast({
@@ -67,19 +71,25 @@ export function EditUserClient({ user, currentUserRole }: EditUserClientProps) {
       return;
     }
 
-    setIsUpdatingPassword(true);
-    // In a real app, you'd make an API call to update the password
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    console.log(`Password for user ${user.id} changed.`);
+    try {
+      setIsUpdatingPassword(true);
+      await updateUserPassword(user.id, newPassword);
 
-    setIsUpdatingPassword(false);
-    setNewPassword('');
-    setConfirmPassword('');
-    toast({
-      title: 'Password Updated',
-      description: `The password for ${user.name} has been successfully changed.`,
-    });
+      setNewPassword('');
+      setConfirmPassword('');
+      toast({
+        title: 'Password Updated',
+        description: `The password for ${user.name} has been successfully changed.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Update Failed',
+        description: 'Failed to update password.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUpdatingPassword(false);
+    }
   };
 
   return (
@@ -114,30 +124,30 @@ export function EditUserClient({ user, currentUserRole }: EditUserClientProps) {
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select value={role} onValueChange={(value) => setRole(value as User['role'])} disabled={isSaving}>
-                      <SelectTrigger id="role">
-                          <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="User">User</SelectItem>
-                          <SelectItem value="Super Admin">Super Admin</SelectItem>
-                      </SelectContent>
-                  </Select>
-              </div>
-              <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={status} onValueChange={(value) => setStatus(value as User['status'])} disabled={isSaving}>
-                      <SelectTrigger id="status">
-                          <SelectValue placeholder="Select a status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="Active">Active</SelectItem>
-                          <SelectItem value="Disabled">Disabled</SelectItem>
-                      </SelectContent>
-                  </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select value={role} onValueChange={(value) => setRole(value as User['role'])} disabled={isSaving}>
+                <SelectTrigger id="role">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="User">User</SelectItem>
+                  <SelectItem value="Super Admin">Super Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select value={status} onValueChange={(value) => setStatus(value as User['status'])} disabled={isSaving}>
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select a status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Disabled">Disabled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <Button onClick={handleUpdateUser} disabled={isSaving}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

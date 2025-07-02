@@ -1,11 +1,11 @@
 
-import { getUserById, getUsers } from '@/services/api';
+import { updateUser, getUsers } from '@/services/api';
 import { PageHeader } from '../../../page-header';
 import { EditUserClient } from './edit-user-client';
 import { notFound } from 'next/navigation';
 
 export default async function EditUserPage({ params }: { params: { id: string } }) {
-  const user = await getUserById(params.id);
+  const user = await updateUser(params.id);
 
   if (!user) {
     notFound();
