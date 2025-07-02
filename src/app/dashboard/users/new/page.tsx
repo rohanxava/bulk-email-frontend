@@ -9,8 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageHeader } from '../../page-header';
 import { useToast } from '@/hooks/use-toast';
-import { sendInvitationEmail } from '@/ai/flows/send-invitation-email';
+// import { sendInvitationEmail } from '@/ai/flows/send-invitation-email';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { register as registerUser } from '@/services/user';
 
 export default function NewUserPage() {
   const [fullName, setFullName] = React.useState('');
@@ -21,53 +22,59 @@ export default function NewUserPage() {
   const [isSending, setIsSending] = React.useState(false);
   const { toast } = useToast();
 
-  const handleSendInvitation = async () => {
-    if (!fullName || !email || !role || !password) {
-      toast({
-        title: 'Missing Information',
-        description: 'Please fill out all fields.',
-        variant: 'destructive',
-      });
-      return;
-    }
+const handleSendInvitation = async () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const adminId = user?._id;
 
-    setIsSending(true);
-    try {
-      const result = await sendInvitationEmail({
-        name: fullName,
-        email,
-        role,
-        password,
-      });
+  if (!adminId) {
+    toast({
+      title: 'Not authorized',
+      description: 'You must be logged in to create users.',
+      variant: 'destructive',
+    });
+    return;
+  }
 
-      if (result.success) {
-        toast({
-          title: 'Invitation Sent',
-          description: `An invitation with login credentials has been sent to ${email}.`,
-        });
-        // Clear form on success
-        setFullName('');
-        setEmail('');
-        setRole('');
-        setPassword('');
-      } else {
-        toast({
-          title: 'Error Sending Invitation',
-          description: result.error || 'An unknown error occurred.',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-       console.error('Failed to send invitation:', error);
-       toast({
-        title: 'Error',
-        description: 'An unexpected error occurred. Please check the console.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSending(false);
-    }
-  };
+  if (!fullName || !email || !role || !password) {
+    toast({
+      title: 'Missing Information',
+      description: 'Please fill out all fields.',
+      variant: 'destructive',
+    });
+    return;
+  }
+
+  setIsSending(true);
+  try {
+    const res = await registerUser({
+      name: fullName,
+      email,
+      role,
+      password,
+      createdBy: adminId, // ✅ Now passed safely
+    });
+
+    toast({
+      title: 'User Created',
+      description: res.message || `An account for ${email} has been created successfully.`,
+    });
+
+    // Clear form fields
+    setFullName('');
+    setEmail('');
+    setRole('');
+    setPassword('');
+  } catch (error: any) {
+    toast({
+      title: 'Error Creating User',
+      description: error?.response?.data?.message || 'An unexpected error occurred.',
+      variant: 'destructive',
+    });
+  } finally {
+    setIsSending(false);
+  }
+};
+
 
 
   return (
@@ -87,9 +94,9 @@ export default function NewUserPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="full-name">Full Name</Label>
-              <Input 
-                id="full-name" 
-                placeholder="e.g., Jane Doe" 
+              <Input
+                id="full-name"
+                placeholder="e.g., Jane Doe"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 disabled={isSending}
@@ -97,9 +104,9 @@ export default function NewUserPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
-              <Input 
-                id="email" 
-                type="email" 
+              <Input
+                id="email"
+                type="email"
                 placeholder="e.g., jane@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -111,8 +118,8 @@ export default function NewUserPage() {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Input 
-                  id="password" 
+                <Input
+                  id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter a secure password"
                   value={password}
@@ -134,13 +141,14 @@ export default function NewUserPage() {
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
               <Select value={role} onValueChange={setRole} disabled={isSending}>
-                  <SelectTrigger id="role">
-                      <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                      <SelectItem value="User">User</SelectItem>
-                      <SelectItem value="Super Admin">Super Admin</SelectItem>
-                  </SelectContent>
+                <SelectTrigger id="role">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="super_admin">Super Admin</SelectItem>
+
+                </SelectContent>
               </Select>
             </div>
           </div>
