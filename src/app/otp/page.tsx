@@ -70,7 +70,7 @@ const [loading, setLoading] = useState(false);
     // Delay redirect so toast is visible
     setTimeout(() => {
       router.push('/dashboard');
-    }, 1500);
+    }, 500);
   } catch (err: any) {
     toast.error(err?.response?.data?.message || 'Invalid or expired OTP');
   }

@@ -129,7 +129,7 @@ export default function LoginPage() {
       // Delay before navigation to let toast show
       setTimeout(() => {
         router.push('/otp');
-      }, 1500);
+      }, 500);
     } catch (error: any) {
       toast.error(error?.response?.data?.message || 'Login failed');
     }
@@ -145,7 +145,7 @@ export default function LoginPage() {
           <div className="flex justify-center items-center mb-4">
             <Mail className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome to Agency MailFlow</CardTitle>
+          <CardTitle className="text-2xl font-bold">Welcome to XAVA MailFlow</CardTitle>
           <CardDescription>Sign in to access your dashboard</CardDescription>
         </CardHeader>
         <CardContent>

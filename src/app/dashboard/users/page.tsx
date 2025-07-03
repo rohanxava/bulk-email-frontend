@@ -1,5 +1,6 @@
 'use client';
-import React from 'react';
+
+import * as React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,27 +9,40 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PageHeader } from '../page-header';
-import { getUsers, deleteUser } from '@/services/api';
+import { getUsers, deleteUser, getCurrentUser } from '@/services/api';
 import { formatDistanceToNow } from 'date-fns';
 
 const roleVariant = {
-  'Super Admin': 'default',
-  'User': 'secondary',
+  'super_admin': 'default',
+  'user': 'secondary',
 } as const;
 
 export default function UsersPage() {
   const [users, setUsers] = React.useState([]);
+  const [currentUser, setCurrentUser] = React.useState<any>(null);
+  const [confirmDeleteUserId, setConfirmDeleteUserId] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    loadUsers();
+    loadAll();
+    const interval = setInterval(loadAll, 30000); // Refresh every 30s
+    return () => clearInterval(interval);
   }, []);
 
-  const loadUsers = async () => {
-    setLoading(true);
+  const loadAll = async () => {
     try {
-      const data = await getUsers();
-      setUsers(data);
+      const [fetchedUsers, fetchedCurrentUser] = await Promise.all([
+        getUsers(),
+        getCurrentUser()
+      ]);
+
+      setCurrentUser(fetchedCurrentUser);
+
+      const filteredUsers = fetchedUsers.filter(
+        (user: any) => user.createdBy === fetchedCurrentUser._id
+      );
+
+      setUsers(filteredUsers);
     } catch (error) {
       console.error(error);
     } finally {
@@ -37,23 +51,18 @@ export default function UsersPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this user?')) {
-      try {
-        await deleteUser(id);
-        setUsers(users.filter((user) => user.id !== id));
-      } catch (err) {
-        alert('Failed to delete user.');
-        console.error(err);
-      }
+    try {
+      await deleteUser(id);
+      setUsers(users.filter((user: any) => user._id !== id));
+      setConfirmDeleteUserId(null);
+    } catch (err) {
+      console.error(err);
     }
   };
 
   return (
     <div>
-      <PageHeader
-        title="User Management"
-        description="Manage platform users and their roles (Super Admin view)."
-      >
+      <PageHeader title="User Management" description="Manage users (Super Admin only)">
         <Button asChild>
           <Link href="/dashboard/users/new">
             <PlusCircle className="mr-2 h-4 w-4" />
@@ -64,7 +73,7 @@ export default function UsersPage() {
       <Card>
         <CardHeader>
           <CardTitle>Users</CardTitle>
-          <CardDescription>A list of all users on the platform.</CardDescription>
+          <CardDescription>All users created by you.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -79,15 +88,17 @@ export default function UsersPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={5}>Loading...</TableCell></TableRow>
-              ) : users && users.length > 0 ? (
-                users.map((user) => (
-                  <TableRow key={user.id}>
+                <TableRow>
+                  <TableCell colSpan={5}>Loading...</TableCell>
+                </TableRow>
+              ) : users.length > 0 ? (
+                users.map((user: any) => (
+                  <TableRow key={user._id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          <AvatarImage src={`https://placehold.co/40x40.png?text=${user.name.charAt(0)}`} />
-                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                          <AvatarImage src={`https://placehold.co/40x40.png?text=${user.name?.charAt(0)}`} />
+                          <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-medium">{user.name}</p>
@@ -101,20 +112,39 @@ export default function UsersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={user.status === 'Active' ? 'default' : 'destructive'}>
-                        {user.status}
+                      <Badge className={user.isOnline ? 'bg-green-500 text-white' : 'bg-yellow-400 text-black'}>
+                        {user.isOnline ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {formatDistanceToNow(new Date(user.lastActive), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(user.lastActive || user.createdAt), {
+                        addSuffix: true,
+                      })}
                     </TableCell>
-                    <TableCell className="flex gap-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/dashboard/users/${user.id}/edit`}>Edit</Link>
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(user.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <TableCell className="flex gap-2 items-center">
+                      {confirmDeleteUserId === user._id ? (
+                        <>
+                          <Button size="sm" variant="destructive" onClick={() => handleDelete(user._id)}>
+                            Confirm
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setConfirmDeleteUserId(null)}>
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/dashboard/users/${user._id}/edit`}>Edit</Link>
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setConfirmDeleteUserId(user._id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))

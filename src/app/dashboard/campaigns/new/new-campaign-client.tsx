@@ -59,14 +59,14 @@ export function NewCampaignClient({
   const [selectedTemplateId, setSelectedTemplateId] = React.useState<string>("");
 
   React.useEffect(() => {
-    if (selectedTemplateId) {
-      const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
-      if (selectedTemplate) {
-        setSubject(selectedTemplate.subject);
-        setEmailContent(selectedTemplate.htmlContent);
-      }
+  if (selectedTemplateId) {
+    const selectedTemplate = templates.find(t => t._id === selectedTemplateId);
+    if (selectedTemplate) {
+      setSubject(selectedTemplate.subject);
+      setEmailContent(selectedTemplate.htmlContent);
     }
-  }, [selectedTemplateId, templates]);
+  }
+}, [selectedTemplateId, templates]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -177,7 +177,7 @@ export function NewCampaignClient({
                   <SelectTrigger id="template"><SelectValue placeholder="Select a template" /></SelectTrigger>
                   <SelectContent>
                     {templates.map(template => (
-                      <SelectItem key={template.id} value={template.id}>{template.name}</SelectItem>
+                      <SelectItem key={template._id} value={template._id}>{template.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

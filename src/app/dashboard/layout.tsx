@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   AreaChart,
   FolderKanban,
@@ -12,7 +12,7 @@ import {
   Mail,
   Settings,
   Users,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   SidebarProvider,
   Sidebar,
@@ -25,8 +25,8 @@ import {
   SidebarInset,
   SidebarTrigger,
   useSidebar,
-} from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,32 +34,47 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Logo } from '@/components/logo';
-import { useUser } from '@/hooks/useUser';
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Logo } from "@/components/logo"; // your logo component
+import { useUser } from "@/hooks/useUser";
+import { useRouter } from "next/navigation";
 
 const navItems = [
-  { href: '/dashboard', icon: Home, label: 'Dashboard' },
-  { href: '/dashboard/projects', icon: FolderKanban, label: 'Projects' },
-  { href: '/dashboard/campaigns', icon: Mail, label: 'Campaigns' },
-  { href: '/dashboard/templates', icon: LayoutTemplate, label: 'Templates' },
-  { href: '/dashboard/reports', icon: AreaChart, label: 'Reports' },
-  { href: '/dashboard/users', icon: Users, label: 'Users' },
+  { href: "/dashboard", icon: Home, label: "Dashboard" },
+  { href: "/dashboard/projects", icon: FolderKanban, label: "Projects" },
+  { href: "/dashboard/campaigns", icon: Mail, label: "Campaigns" },
+  { href: "/dashboard/templates", icon: LayoutTemplate, label: "Templates" },
+  { href: "/dashboard/reports", icon: AreaChart, label: "Reports" },
+  { href: "/dashboard/users", icon: Users, label: "Users" },
 ];
 
-const settingsItem = { href: '/dashboard/settings', icon: Settings, label: 'Settings' };
+const settingsItem = {
+  href: "/dashboard/settings",
+  icon: Settings,
+  label: "Settings",
+};
 
 function UserMenu() {
   const { user, loading } = useUser();
+
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    router.push("/");
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src="https://placehold.co/40x40.png" alt={user?.name || '@user'} />
-            <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
+          <Avatar className="h-8 w-8 bg-gray-200">
+            <AvatarImage
+              src="https://propertypanda.ae/public/assets/admin/img/users/user-0.png"
+              alt={user?.name || "@user"}
+            />
+            <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -67,15 +82,15 @@ function UserMenu() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {loading ? 'Loading...' : user?.name || 'User'}
+              {loading ? "Loading..." : user?.name || "User"}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
-              {loading ? '' : user?.email || 'user@example.com'}
+              {loading ? "" : user?.email || "user@example.com"}
             </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>
@@ -84,7 +99,11 @@ function UserMenu() {
   );
 }
 
-function NavItem({ item }: { item: { href: string; icon: React.ElementType; label: string } }) {
+function NavItem({
+  item,
+}: {
+  item: { href: string; icon: React.ElementType; label: string };
+}) {
   const pathname = usePathname();
   const Icon = item.icon;
   const isActive = pathname === item.href;
@@ -93,7 +112,10 @@ function NavItem({ item }: { item: { href: string; icon: React.ElementType; labe
   if (isMobile) {
     return (
       <Link href={item.href} className="w-full">
-        <Button variant={isActive ? 'secondary' : 'ghost'} className="w-full justify-start gap-2">
+        <Button
+          variant={isActive ? "secondary" : "ghost"}
+          className="w-full justify-start gap-2"
+        >
           <Icon className="h-4 w-4" />
           {item.label}
         </Button>
@@ -117,33 +139,53 @@ function NavItem({ item }: { item: { href: string; icon: React.ElementType; labe
   );
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { user, loading } = useUser(); // 👈 get current user
+
+  const filteredNavItems = React.useMemo(() => {
+    if (!user || loading) return [];
+    // Only include "Users" if super_admin
+    return navItems.filter(item =>
+      item.href === "/dashboard/users" ? user.role === "super_admin" : true
+    );
+  }, [user, loading]);
+
+  const showSettings = user?.role === "super_admin"; // 👈 condition for settings
+
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader>
+        <SidebarHeader className="flex items-center px-4 py-2 gap-2">
           <Logo />
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <NavItem key={item.href} item={item} />
             ))}
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
           <SidebarMenu>
-            <NavItem item={settingsItem} />
+            {showSettings && <NavItem item={settingsItem} />}
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
+        <header className="flex h-14 items-center border-b bg-card px-4 lg:h-[60px] lg:px-6">
           <SidebarTrigger className="md:hidden" />
-          <UserMenu />
+          <div className="ml-auto">
+            <UserMenu />
+          </div>
         </header>
+
         <main className="flex-1 p-4 sm:p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
 }
+

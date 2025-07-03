@@ -35,6 +35,49 @@ export const getCurrentUser = async () => {
 };
 
 
+export const updateCurrentUser = async (updatedFields: { name?: string }) => {
+  const token = localStorage.getItem('token');
+  if (!token) throw new Error('No token found');
+
+  const res = await fetch(`${BASE_URL}/me`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updatedFields),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Failed to update user');
+  }
+
+  return res.json();
+};
+
+export const updatePassword = async (currentPassword: string, newPassword: string) => {
+  const token = localStorage.getItem('token');
+  if (!token) throw new Error('No token found');
+
+  const res = await fetch(`${BASE_URL}/me/password`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Failed to update password');
+  }
+
+  return res.json();
+};
+
+
 /////////////////////////////////////projects/////////////////////////////////////
 
 export const fetchProjects = async () => {
@@ -196,7 +239,7 @@ export const getCampaignStatusCounts = async () => {
 //////////////////////////users////////////////////////////////
 export const getUsers = async () => {
   const token = localStorage.getItem('token');
-  const res = await fetch('${BASE_URL}/users', {
+  const res = await fetch(`${BASE_URL}/users`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -216,18 +259,29 @@ export const deleteUser = async (id: string) => {
 };
 
 export const updateUser = async (id: string, updatedData: any) => {
-  const token = localStorage.getItem("token");
-
+  const token = localStorage.getItem('token');
   const res = await fetch(`${BASE_URL}/users/${id}`, {
-    method: "PUT",
+    method: 'PUT',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(updatedData),
   });
 
-  if (!res.ok) throw new Error("Failed to update user");
+  if (!res.ok) throw new Error('Failed to update user');
   return res.json();
 };
+
+
+export const getUserById = async (id: string) => {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${BASE_URL}/users/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error('Failed to fetch user');
+  return res.json();
+};
+
 //////////////////////////users////////////////////////////////

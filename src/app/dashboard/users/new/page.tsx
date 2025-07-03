@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -9,9 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageHeader } from '../../page-header';
 import { useToast } from '@/hooks/use-toast';
-// import { sendInvitationEmail } from '@/ai/flows/send-invitation-email';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { register as registerUser } from '@/services/user';
+import { useUser } from '@/hooks/useUser'; // ✅ Correctly import the useUser hook
 
 export default function NewUserPage() {
   const [fullName, setFullName] = React.useState('');
@@ -22,60 +21,57 @@ export default function NewUserPage() {
   const [isSending, setIsSending] = React.useState(false);
   const { toast } = useToast();
 
-const handleSendInvitation = async () => {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const { user, loading } = useUser(); // ✅ Use the user hook to get current logged-in user
   const adminId = user?._id;
 
-  if (!adminId) {
-    toast({
-      title: 'Not authorized',
-      description: 'You must be logged in to create users.',
-      variant: 'destructive',
-    });
-    return;
-  }
+  const handleSendInvitation = async () => {
+    if (!adminId) {
+      toast({
+        title: 'Not authorized',
+        description: 'You must be logged in to create users.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-  if (!fullName || !email || !role || !password) {
-    toast({
-      title: 'Missing Information',
-      description: 'Please fill out all fields.',
-      variant: 'destructive',
-    });
-    return;
-  }
+    if (!fullName || !email || !role || !password) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please fill out all fields.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-  setIsSending(true);
-  try {
-    const res = await registerUser({
-      name: fullName,
-      email,
-      role,
-      password,
-      createdBy: adminId, // ✅ Now passed safely
-    });
+    setIsSending(true);
+    try {
+      const res = await registerUser({
+        name: fullName,
+        email,
+        role,
+        password,
+        createdBy: adminId,
+      });
 
-    toast({
-      title: 'User Created',
-      description: res.message || `An account for ${email} has been created successfully.`,
-    });
+      toast({
+        title: 'User Created',
+        description: res.message || `An account for ${email} has been created successfully.`,
+      });
 
-    // Clear form fields
-    setFullName('');
-    setEmail('');
-    setRole('');
-    setPassword('');
-  } catch (error: any) {
-    toast({
-      title: 'Error Creating User',
-      description: error?.response?.data?.message || 'An unexpected error occurred.',
-      variant: 'destructive',
-    });
-  } finally {
-    setIsSending(false);
-  }
-};
-
-
+      setFullName('');
+      setEmail('');
+      setRole('');
+      setPassword('');
+    } catch (error: any) {
+      toast({
+        title: 'Error Creating User',
+        description: error?.response?.data?.message || 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -147,7 +143,6 @@ const handleSendInvitation = async () => {
                 <SelectContent>
                   <SelectItem value="user">User</SelectItem>
                   <SelectItem value="super_admin">Super Admin</SelectItem>
-
                 </SelectContent>
               </Select>
             </div>

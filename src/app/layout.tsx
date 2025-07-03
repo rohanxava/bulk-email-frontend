@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'Agency MailFlow',
+  title: 'XAVA EMAIL FLOW',
   description: 'SaaS Bulk Email Marketing Platform',
 };
 
