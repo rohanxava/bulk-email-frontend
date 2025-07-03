@@ -23,8 +23,8 @@ const getToken = () => {
 
 
 export const getCurrentUser = async () => {
-  const token = localStorage.getItem('token'); // Or use cookies if you're SSR
-  const res = await fetch('${BASE_URL}/me', {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${BASE_URL}/me`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -93,8 +93,6 @@ export const deleteProject = async (id: string) => {
 
 
 /////////////////////////////templates/////////////////////////////////////
-
-
 export const createTemplate = async (data: any) => {
   const res = await fetch(`${BASE_URL}/templates`, {
     method: 'POST',
@@ -137,9 +135,6 @@ export const deleteTemplate = async (id: string) => {
   });
   return res.json();
 };
-
-
-
 /////////////////////////////templates/////////////////////////////////////
 
 
@@ -179,7 +174,6 @@ export const saveCampaign = async (data: any) => {
 
 
 ////////////////////////////analytics/////////////////////////////////////
-
 export const getAnalyticsSummary = async () => {
   const res = await fetch(`${BASE_URL}/analytics/summary`, {
     headers: { Authorization: `Bearer ${getToken()}` },
@@ -194,17 +188,15 @@ export const getCampaignStatusCounts = async () => {
   if (!res.ok) throw new Error("Failed to fetch campaign status counts");
   return res.json();
 };
-
 ////////////////////////////analytics/////////////////////////////////////
 
 
 
 
 //////////////////////////users////////////////////////////////
-
 export const getUsers = async () => {
   const token = localStorage.getItem('token');
-  const res = await fetch('/api/users', {
+  const res = await fetch('${BASE_URL}/users', {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -214,7 +206,7 @@ export const getUsers = async () => {
 
 export const deleteUser = async (id: string) => {
   const token = localStorage.getItem('token');
-  const res = await fetch(`/api/users/${id}`, {
+  const res = await fetch(`${BASE_URL}/users/${id}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -226,7 +218,7 @@ export const deleteUser = async (id: string) => {
 export const updateUser = async (id: string, updatedData: any) => {
   const token = localStorage.getItem("token");
 
-  const res = await fetch(`/api/users/${id}`, {
+  const res = await fetch(`${BASE_URL}/users/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -238,5 +230,4 @@ export const updateUser = async (id: string, updatedData: any) => {
   if (!res.ok) throw new Error("Failed to update user");
   return res.json();
 };
-
 //////////////////////////users////////////////////////////////

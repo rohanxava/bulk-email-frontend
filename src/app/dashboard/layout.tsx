@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/logo';
-import { cn } from '@/lib/utils';
+import { useUser } from '@/hooks/useUser';
 
 const navItems = [
   { href: '/dashboard', icon: Home, label: 'Dashboard' },
@@ -51,22 +51,26 @@ const navItems = [
 const settingsItem = { href: '/dashboard/settings', icon: Settings, label: 'Settings' };
 
 function UserMenu() {
+  const { user, loading } = useUser();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="https://placehold.co/40x40.png" alt="@user" data-ai-hint="user avatar" />
-            <AvatarFallback>U</AvatarFallback>
+            <AvatarImage src="https://placehold.co/40x40.png" alt={user?.name || '@user'} />
+            <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">User</p>
+            <p className="text-sm font-medium leading-none">
+              {loading ? 'Loading...' : user?.name || 'User'}
+            </p>
             <p className="text-xs leading-none text-muted-foreground">
-              user@example.com
+              {loading ? '' : user?.email || 'user@example.com'}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -85,7 +89,7 @@ function NavItem({ item }: { item: { href: string; icon: React.ElementType; labe
   const Icon = item.icon;
   const isActive = pathname === item.href;
   const { isMobile } = useSidebar();
-  
+
   if (isMobile) {
     return (
       <Link href={item.href} className="w-full">
@@ -114,9 +118,6 @@ function NavItem({ item }: { item: { href: string; icon: React.ElementType; labe
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const isActive = (href: string) => pathname === href;
-
   return (
     <SidebarProvider>
       <Sidebar>
@@ -139,9 +140,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <SidebarInset>
         <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
           <SidebarTrigger className="md:hidden" />
-          <div className="flex-1">
-            {/* Can add breadcrumbs here */}
-          </div>
           <UserMenu />
         </header>
         <main className="flex-1 p-4 sm:p-6">{children}</main>
