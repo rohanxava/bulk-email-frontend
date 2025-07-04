@@ -161,12 +161,12 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
-            <Button asChild variant="outline" className="w-full">
+            {/* <Button asChild variant="outline" className="w-full">
               <Link href="/dashboard">
                 <GoogleIcon className="mr-2 h-4 w-4" />
                 Sign in with Google
               </Link>
-            </Button>
+            </Button> */}
           </form>
 
           <div className="mt-4 text-center text-sm">

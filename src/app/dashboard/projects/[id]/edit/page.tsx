@@ -78,6 +78,7 @@ export default function EditProjectPage() {
     name: "",
     description: "",
     sendgridKey: "",
+    fromEmail: "",
   });
   const router = useRouter();
 
@@ -88,6 +89,7 @@ export default function EditProjectPage() {
         name: data.name || "",
         description: data.description || "",
         sendgridKey: data.sendgridKey || "",
+        fromEmail: data.fromEmail || "",
       });
     };
     load();
@@ -154,6 +156,20 @@ export default function EditProjectPage() {
                 }
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="fromEmail">From Email</Label>
+              <Input
+                id="fromEmail"
+                type="email"
+                placeholder="123@gmail.com"
+                value={form.fromEmail}
+                onChange={(e) =>
+                  setForm({ ...form, fromEmail: e.target.value })
+                }
+              />
+            </div>
+
+
 
             <Button type="submit">Update Project</Button>
           </form>

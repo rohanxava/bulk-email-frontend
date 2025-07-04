@@ -53,7 +53,7 @@ export default function SignupPage() {
             <Mail className="h-8 w-8 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold">Create an Account</CardTitle>
-          <CardDescription>Join Agency MailFlow today</CardDescription>
+          <CardDescription> XAVA MailFlow </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -72,12 +72,12 @@ export default function SignupPage() {
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? 'Creating Account...' : 'Create Account'}
             </Button>
-            <Button asChild variant="outline" className="w-full">
+            {/* <Button asChild variant="outline" className="w-full">
               <Link href="/dashboard">
                 <GoogleIcon className="mr-2 h-4 w-4" />
                 Sign up with Google
               </Link>
-            </Button>
+            </Button> */}
           </form>
 
           <div className="mt-4 text-center text-sm">
