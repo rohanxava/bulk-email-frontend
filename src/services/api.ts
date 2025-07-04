@@ -181,30 +181,42 @@ export const deleteTemplate = async (id: string) => {
 /////////////////////////////templates/////////////////////////////////////
 
 
-//////////////////////campaigns/////////////////////////////////////
+//////////////////////campaigns/////////////////////////////////////// 
+
+const getAuthHeaders = () => ({
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${localStorage.getItem('token')}`,
+});
+
+// 📌 Get all campaigns
 export const getCampaigns = async () => {
-  const res = await fetch(`${BASE_URL}/campaign`);
+  const res = await fetch(`${BASE_URL}/campaign`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+
   if (!res.ok) throw new Error("Failed to fetch campaigns");
   return res.json();
 };
 
+// 📌 Get a single campaign by ID
 export const getCampaignById = async (id: string) => {
-  const res = await fetch(`${BASE_URL}/campaign/${id}`);
+  const res = await fetch(`${BASE_URL}/campaign/${id}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+
   if (!res.ok) return null;
   return res.json();
 };
 
+// 📌 Create or update campaign
 export const saveCampaign = async (data: any) => {
-  const isUpdate = Boolean(data.id);
-
-  const res = await fetch(
-    `${BASE_URL}/campaign${isUpdate ? `/${data.id}` : ''}`,
-    {
-      method: isUpdate ? 'PUT' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }
-  );
+  const res = await fetch(`${BASE_URL}/campaign/save`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
 
   if (!res.ok) {
     const err = await res.json();
@@ -213,6 +225,39 @@ export const saveCampaign = async (data: any) => {
 
   return res.json();
 };
+
+// 📌 Delete campaign by ID
+export const deleteCampaign = async (id: string) => {
+  const res = await fetch(`${BASE_URL}/campaign/${id}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || 'Failed to delete campaign');
+  }
+
+  return res.json();
+};
+
+// 📌 Send campaign
+export const sendCampaign = async (data: any) => {
+  const res = await fetch(`${BASE_URL}/campaign/send`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || 'Send failed');
+  }
+
+  return res.json();
+};
+
+
 ////////////////////////////campaigns/////////////////////////////////////
 
 
@@ -227,7 +272,9 @@ export const getAnalyticsSummary = async () => {
 
 
 export const getCampaignStatusCounts = async () => {
-  const res = await fetch(`${BASE_URL}/analytics/status-counts`);
+  const res = await fetch(`${BASE_URL}/analytics/status-counts`,{
+headers: { Authorization: `Bearer ${getToken()}` },
+  });
   if (!res.ok) throw new Error("Failed to fetch campaign status counts");
   return res.json();
 };
