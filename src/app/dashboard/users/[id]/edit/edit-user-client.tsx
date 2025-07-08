@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { getUserById, getUsers, getCurrentUser, updateUser } from "@/services/api";
+import { getUserById, getCurrentUser, updateUser } from "@/services/api";
 import type { User } from "@/lib/types";
 
 interface EditUserClientProps {
@@ -30,13 +30,14 @@ interface EditUserClientProps {
 export function EditUserClient({ userId }: EditUserClientProps) {
   const { toast } = useToast();
   const [user, setUser] = React.useState<User | null>(null);
-  const [currentUserRole, setCurrentUserRole] = React.useState<User["role"]>("User");
+  const [currentUserRole, setCurrentUserRole] = React.useState<User["role"]>("user");
   const [loading, setLoading] = React.useState(true);
 
   const [fullName, setFullName] = React.useState("");
   const [email, setEmail] = React.useState("");
-const [role, setRole] = React.useState<"user" | "super_admin">("user");
+  const [role, setRole] = React.useState<"user" | "super_admin">("user");
   const [status, setStatus] = React.useState<"Active" | "Disabled">("Active");
+  const [canCreateProject, setCanCreateProject] = React.useState(true);
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [isSaving, setIsSaving] = React.useState(false);
@@ -49,14 +50,13 @@ const [role, setRole] = React.useState<"user" | "super_admin">("user");
           getUserById(userId),
           getCurrentUser(),
         ]);
-        console.log("🔐 Current user role:", currentUser.role);
-
 
         setUser(fetchedUser);
         setFullName(fetchedUser.name);
         setEmail(fetchedUser.email);
         setRole(fetchedUser.role);
         setStatus(fetchedUser.status);
+        setCanCreateProject(fetchedUser.canCreateProject ?? true);
         setCurrentUserRole(currentUser.role);
       } catch (err) {
         toast({
@@ -75,7 +75,13 @@ const [role, setRole] = React.useState<"user" | "super_admin">("user");
   const handleUpdateUser = async () => {
     try {
       setIsSaving(true);
-      await updateUser(userId, { name: fullName, email, role, status });
+      await updateUser(userId, {
+        name: fullName,
+        email,
+        role,
+        status,
+        canCreateProject,
+      });
 
       toast({
         title: "User Updated",
@@ -192,6 +198,34 @@ const [role, setRole] = React.useState<"user" | "super_admin">("user");
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <Label>Project Access</Label>
+              <div className="flex gap-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="canCreateProject"
+                    value="true"
+                    checked={canCreateProject === true}
+                    onChange={() => setCanCreateProject(true)}
+                    disabled={isSaving}
+                  />
+                  <span className="text-sm font-medium">User can create project</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="canCreateProject"
+                    value="false"
+                    checked={canCreateProject === false}
+                    onChange={() => setCanCreateProject(false)}
+                    disabled={isSaving}
+                  />
+                  <span className="text-sm font-medium">User cannot create project</span>
+                </label>
+              </div>
+            </div>
           </div>
 
           <Button onClick={handleUpdateUser} disabled={isSaving}>
@@ -201,7 +235,7 @@ const [role, setRole] = React.useState<"user" | "super_admin">("user");
         </CardContent>
       </Card>
 
-      {currentUserRole?.toLowerCase?.() === "super_admin" &&  (
+      {currentUserRole?.toLowerCase?.() === "super_admin" && (
         <Card>
           <CardHeader>
             <CardTitle>Update Password</CardTitle>

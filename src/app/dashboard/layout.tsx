@@ -160,8 +160,8 @@ export default function DashboardLayout({
       }
 
       if (item.href === "/dashboard/projects") {
-        return user.canCreateProject;
-      }
+  return user.role === "super_admin" || user.canCreateProject;
+}
 
       return true;
     });
