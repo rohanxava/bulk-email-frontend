@@ -36,10 +36,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Logo } from "@/components/logo"; // your logo component
+import { Logo } from "@/components/logo";
 import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
 
+// All navigation items
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
   { href: "/dashboard/projects", icon: FolderKanban, label: "Projects" },
@@ -49,15 +50,16 @@ const navItems = [
   { href: "/dashboard/users", icon: Users, label: "Users" },
 ];
 
+// Settings item
 const settingsItem = {
   href: "/dashboard/settings",
   icon: Settings,
   label: "Settings",
 };
 
+// Top-right user menu
 function UserMenu() {
   const { user, loading } = useUser();
-
   const router = useRouter();
 
   const handleLogout = () => {
@@ -99,6 +101,7 @@ function UserMenu() {
   );
 }
 
+// Sidebar navigation item
 function NavItem({
   item,
 }: {
@@ -139,22 +142,32 @@ function NavItem({
   );
 }
 
+// Main layout
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useUser(); // 👈 get current user
+  const { user, loading } = useUser();
 
+  // Filter nav items based on user role and permissions
   const filteredNavItems = React.useMemo(() => {
     if (!user || loading) return [];
-    // Only include "Users" if super_admin
-    return navItems.filter(item =>
-      item.href === "/dashboard/users" ? user.role === "super_admin" : true
-    );
+
+    return navItems.filter((item) => {
+      if (item.href === "/dashboard/users") {
+        return user.role === "super_admin";
+      }
+
+      if (item.href === "/dashboard/projects") {
+        return user.canCreateProject;
+      }
+
+      return true;
+    });
   }, [user, loading]);
 
-  const showSettings = user?.role === "super_admin"; // 👈 condition for settings
+  const showSettings = user?.role === "super_admin";
 
   return (
     <SidebarProvider>
@@ -188,4 +201,3 @@ export default function DashboardLayout({
     </SidebarProvider>
   );
 }
-

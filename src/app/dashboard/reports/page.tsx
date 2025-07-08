@@ -51,8 +51,10 @@ export default function ReportsPage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      
       try {
         const data = await getCampaigns();
+        console.log("Raw campaigns from API:", data);
         setCampaigns(data);
 
         // Fix: Use correct field and sort by createdDate

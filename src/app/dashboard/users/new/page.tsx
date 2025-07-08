@@ -19,6 +19,7 @@ export default function NewUserPage() {
   const [password, setPassword] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
   const [isSending, setIsSending] = React.useState(false);
+  const [canCreateProject, setCanCreateProject] = React.useState(true);
   const { toast } = useToast();
 
   const { user, loading } = useUser(); // ✅ Use the user hook to get current logged-in user
@@ -51,6 +52,7 @@ export default function NewUserPage() {
         role,
         password,
         createdBy: adminId,
+        canCreateProject, // ✅ Include this in your backend
       });
 
       toast({
@@ -146,11 +148,45 @@ export default function NewUserPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <Label>Project Access</Label>
+              <div className="flex gap-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="canCreateProject"
+                    value="true"
+                    checked={canCreateProject === true}
+                    onChange={() => setCanCreateProject(true)}
+                    disabled={isSending}
+                  />
+                  <span className="text-sm font-medium">User can create project</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="canCreateProject"
+                    value="false"
+                    checked={canCreateProject === false}
+                    onChange={() => setCanCreateProject(false)}
+                    disabled={isSending}
+                  />
+                  <span className="text-sm font-medium">User cannot create project</span>
+                </label>
+              </div>
+            </div>
+
+
           </div>
+
+
           <Button onClick={handleSendInvitation} disabled={isSending} className="w-full sm:w-auto">
             {isSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Send Invitation
           </Button>
+
+
         </CardContent>
       </Card>
     </div>
