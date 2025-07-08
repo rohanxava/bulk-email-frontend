@@ -148,14 +148,26 @@ export const createTemplate = async (data: any) => {
   return res.json();
 };
 
-export const getTemplates = async () => {
-  const res = await fetch(`${BASE_URL}/templates`, {
+// services/api.ts
+
+export const getTemplates = async (projectId?: string) => {
+  const url = projectId
+    ? `${BASE_URL}/templates?projectId=${projectId}`
+    : `${BASE_URL}/templates`;
+
+  const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${getToken()}`,
     },
   });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch templates");
+  }
+
   return res.json();
 };
+
 
 export const updateTemplate = async (id: string, data: any) => {
   const res = await fetch(`${BASE_URL}/templates/${id}`, {
@@ -178,6 +190,19 @@ export const deleteTemplate = async (id: string) => {
   });
   return res.json();
 };
+
+
+export const getTemplateById = async (id: string)=>{
+  const res = await fetch(`/api/templates/${id}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  if (!res.ok) throw new Error("Failed to fetch template");
+  return res.json();
+}
+
 /////////////////////////////templates/////////////////////////////////////
 
 

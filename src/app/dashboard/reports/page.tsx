@@ -55,15 +55,23 @@ export default function ReportsPage() {
         const data = await getCampaigns();
         setCampaigns(data);
 
-        const generatedChartData = data.slice(0, 5).map((campaign: any) => ({
-          
-          date: new Date(data.createdDate).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-          }),
-          opens: campaign.stats?.opened || 0,
-          clicks: campaign.stats?.clicks || 0,
-        }));
+        // Fix: Use correct field and sort by createdDate
+        const generatedChartData = data
+          .filter((campaign: any) => campaign.createdDate) // Optional safety
+          .sort(
+            (a, b) =>
+              new Date(a.createdDate).getTime() -
+              new Date(b.createdDate).getTime()
+          )
+          .slice(0, 5)
+          .map((campaign: any) => ({
+            date: new Date(campaign.createdDate).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            }),
+            opens: campaign.stats?.opened || 0,
+            clicks: campaign.stats?.clicks || 0,
+          }));
 
         setChartData(generatedChartData);
       } catch (error) {
@@ -150,9 +158,13 @@ export default function ReportsPage() {
                 const clicks = report.stats?.clicks || 0;
 
                 const openRate =
-                  delivered > 0 ? ((opens / delivered) * 100).toFixed(1) + "%" : "0%";
+                  delivered > 0
+                    ? ((opens / delivered) * 100).toFixed(1) + "%"
+                    : "0%";
                 const clickRate =
-                  opens > 0 ? ((clicks / opens) * 100).toFixed(1) + "%" : "0%";
+                  opens > 0
+                    ? ((clicks / opens) * 100).toFixed(1) + "%"
+                    : "0%";
 
                 return (
                   <TableRow key={index}>
