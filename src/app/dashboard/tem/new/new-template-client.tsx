@@ -25,7 +25,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Eye, Bold, Italic, Underline, Heading, List, Palette } from "lucide-react";
+import {
+  Eye,
+  Bold,
+  Italic,
+  Underline,
+  Heading,
+  List,
+  Palette,
+} from "lucide-react";
 import type { Project } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { createTemplate } from "@/services/api";
@@ -45,6 +53,10 @@ export function NewTemplateClient({ projects }: NewTemplateClientProps) {
   const [isHtmlMode, setIsHtmlMode] = React.useState(false);
   const rawTextRef = React.useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+
+  const [showLinkInput, setShowLinkInput] = React.useState(false);
+  const [linkURL, setLinkURL] = React.useState("");
+  const [linkText, setLinkText] = React.useState("");
 
   const handleSaveTemplate = async () => {
     const contentToSave = isHtmlMode ? htmlContent : rawText;
@@ -69,8 +81,6 @@ export function NewTemplateClient({ projects }: NewTemplateClientProps) {
         title: "Template Saved",
         description: "Your new template has been saved successfully.",
       });
-
-      // Clear fields (optional)
     } catch (error) {
       console.error("Failed to save template", error);
       toast({
@@ -95,18 +105,56 @@ export function NewTemplateClient({ projects }: NewTemplateClientProps) {
     setRawText(newText);
     setTimeout(() => {
       textarea.focus();
-      textarea.setSelectionRange(start + startTag.length, end + startTag.length);
+      textarea.setSelectionRange(
+        start + startTag.length,
+        end + startTag.length
+      );
     }, 0);
   };
 
   const insertBulletList = () => {
-    const lines = rawText.split("\n").map((line) => `<li>${line.trim()}</li>`);
+    const lines = rawText
+      .split("\n")
+      .map((line) => `<li>${line.trim()}</li>`);
     const wrapped = `<ul>\n${lines.join("\n")}\n</ul>`;
     setRawText(wrapped);
   };
 
+  const insertLink = () => {
+    const textarea = rawTextRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = rawText.slice(start, end);
+    const before = rawText.slice(0, start);
+    const after = rawText.slice(end);
+
+    const finalText = linkText || selected || "Link";
+    const linkTag = `<a href="${linkURL}" target="_blank">${finalText}</a>`;
+    const newText = before + linkTag + after;
+
+    setRawText(newText);
+    setShowLinkInput(false);
+    setLinkURL("");
+    setLinkText("");
+
+    setTimeout(() => {
+      textarea.focus();
+      const newStart = start + linkTag.length;
+      textarea.setSelectionRange(newStart, newStart);
+    }, 0);
+  };
+
   const colorOptions = [
-    "#000000", "#FF0000", "#008000", "#0000FF", "#FFA500", "#800080", "#808080", "#008080",
+    "#000000",
+    "#FF0000",
+    "#008000",
+    "#0000FF",
+    "#FFA500",
+    "#800080",
+    "#808080",
+    "#008080",
   ];
 
   return (
@@ -189,20 +237,47 @@ export function NewTemplateClient({ projects }: NewTemplateClientProps) {
           {!isHtmlMode ? (
             <>
               <div className="flex gap-2 flex-wrap mb-2">
-                <Button size="sm" onClick={() => wrapSelectedText("<b>", "</b>")}>
+                <Button
+                  size="sm"
+                  title="Bold"
+                  onClick={() => wrapSelectedText("<b>", "</b>")}
+                >
                   <Bold className="w-4 h-4" />
                 </Button>
-                <Button size="sm" onClick={() => wrapSelectedText("<i>", "</i>")}>
+                <Button
+                  size="sm"
+                  title="Italic"
+                  onClick={() => wrapSelectedText("<i>", "</i>")}
+                >
                   <Italic className="w-4 h-4" />
                 </Button>
-                <Button size="sm" onClick={() => wrapSelectedText("<u>", "</u>")}>
+                <Button
+                  size="sm"
+                  title="Underline"
+                  onClick={() => wrapSelectedText("<u>", "</u>")}
+                >
                   <Underline className="w-4 h-4" />
                 </Button>
-                <Button size="sm" onClick={() => wrapSelectedText("<h3>", "</h3>")}>
+                <Button
+                  size="sm"
+                  title="Heading"
+                  onClick={() => wrapSelectedText("<h3>", "</h3>")}
+                >
                   <Heading className="w-4 h-4" />
                 </Button>
-                <Button size="sm" onClick={insertBulletList}>
+                <Button
+                  size="sm"
+                  title="Bullet List"
+                  onClick={insertBulletList}
+                >
                   <List className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  title="Insert Link"
+                  onClick={() => setShowLinkInput(!showLinkInput)}
+                >
+                  🔗
                 </Button>
                 <div className="flex items-center gap-1">
                   <Palette className="w-4 h-4 text-muted-foreground" />
@@ -212,11 +287,35 @@ export function NewTemplateClient({ projects }: NewTemplateClientProps) {
                       style={{ backgroundColor: color }}
                       className="w-5 h-5 rounded-full border"
                       title={color}
-                      onClick={() => wrapSelectedText(`<span style="color: ${color}">`, "</span>")}
+                      onClick={() =>
+                        wrapSelectedText(
+                          `<span style="color: ${color}">`,
+                          "</span>"
+                        )
+                      }
                     />
                   ))}
                 </div>
               </div>
+
+              {showLinkInput && (
+                <div className="flex flex-col sm:flex-row gap-2 mb-2">
+                  <Input
+                    placeholder="Enter URL"
+                    value={linkURL}
+                    onChange={(e) => setLinkURL(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Link text"
+                    value={linkText}
+                    onChange={(e) => setLinkText(e.target.value)}
+                  />
+                  <Button onClick={insertLink} disabled={!linkURL}>
+                    Insert
+                  </Button>
+                </div>
+              )}
+
               <textarea
                 ref={rawTextRef}
                 className="w-full min-h-[300px] border rounded p-2 font-mono"
