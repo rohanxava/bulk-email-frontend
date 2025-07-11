@@ -1,11 +1,17 @@
+
+
 import axios from 'axios';
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ;
+
+
+const Baseurl = process.env.NEXT_PUBLIC_BASE_URL ;
+const BASE_URL= `${Baseurl}/api`;
 const api = axios.create({
-  baseURL: `${BASE_URL}/api`,
+  baseURL: `${BASE_URL}`,
 });
 
+
 export default api;
-  
+
 import { mockProjects, mockUsers, mockTemplates, mockCampaigns } from './mock-data';
 import type { Project, User, Template, Campaign } from '@/lib/types';
 
@@ -14,7 +20,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 
 
-// const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ;
+// const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 const getToken = () => {
   return typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -192,7 +198,7 @@ export const deleteTemplate = async (id: string) => {
 };
 
 
-export const getTemplateById = async (id: string)=>{
+export const getTemplateById = async (id: string) => {
   const res = await fetch(`/api/templates/${id}`, {
     method: 'GET',
     headers: {
@@ -206,7 +212,7 @@ export const getTemplateById = async (id: string)=>{
 /////////////////////////////templates/////////////////////////////////////
 
 
-//////////////////////campaigns/////////////////////////////////////// 
+//////////////////////campaigns///////////////////////////////////////
 
 const getAuthHeaders = () => ({
   'Content-Type': 'application/json',
@@ -297,8 +303,8 @@ export const getAnalyticsSummary = async () => {
 
 
 export const getCampaignStatusCounts = async () => {
-  const res = await fetch(`${BASE_URL}/analytics/status-counts`,{
-headers: { Authorization: `Bearer ${getToken()}` },
+  const res = await fetch(`${BASE_URL}/analytics/status-counts`, {
+    headers: { Authorization: `Bearer ${getToken()}` },
   });
   if (!res.ok) throw new Error("Failed to fetch campaign status counts");
   return res.json();
