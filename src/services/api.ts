@@ -1,7 +1,7 @@
 import axios from 'axios';
-
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ;
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: `${BASE_URL}/api`,
 });
 
 export default api;
@@ -14,7 +14,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+// const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ;
 
 const getToken = () => {
   return typeof window !== "undefined" ? localStorage.getItem("token") : null;
