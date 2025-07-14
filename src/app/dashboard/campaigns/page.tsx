@@ -80,7 +80,7 @@ export default function CampaignsPage() {
       setOpen(false);
     }
   };
- 
+
 
 
   return (
@@ -125,7 +125,7 @@ export default function CampaignsPage() {
                     <TableCell>{campaign.createdBy?.name || '-'}</TableCell>
                     <TableCell>
                       {campaign.createdDate
-                        ? format(new Date(campaign.createdDate), 'PPP')
+                        ? format(new Date(campaign.createdDate), "PPP 'at' p")
                         : 'N/A'}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
