@@ -364,7 +364,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
     <span className="text-red-500 ml-1">*</span>
   </Label>
   <p className="text-xs text-muted-foreground mb-2">
-    <span className="text-red-500">*</span> The file must contain an <strong>"Email"</strong> column (case-insensitive, no spaces). Example header: <code>Email</code>
+    <span className="text-red-500">*</span> The file must contain an <strong>"Email"</strong> column (case-insensitive, no spaces(not even after the header)). Example header: <code>Email</code>
   </p>
   <label htmlFor="contacts-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted">
     <Upload className="w-8 h-8 mb-3 text-muted-foreground mx-auto" />
