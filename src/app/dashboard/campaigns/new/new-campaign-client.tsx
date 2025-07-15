@@ -359,13 +359,20 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
           <CardHeader><CardTitle>Configuration</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label className="block mb-2">Upload Contacts (CSV/XLSX)</Label>
-              <label htmlFor="contacts-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted">
-                <Upload className="w-8 h-8 mb-3 text-muted-foreground mx-auto" />
-                <p className="text-sm text-muted-foreground">{csvFileName || "Click to upload CSV or XLSX"}</p>
-                <Input id="contacts-file" type="file" className="hidden" accept=".csv,.xlsx" onChange={handleFileChange} />
-              </label>
-            </div>
+  <Label className="block mb-2">
+    Upload Contacts (CSV/XLSX)
+    <span className="text-red-500 ml-1">*</span>
+  </Label>
+  <p className="text-xs text-muted-foreground mb-2">
+    <span className="text-red-500">*</span> The file must contain an <strong>"Email"</strong> column (case-insensitive, no spaces). Example header: <code>Email</code>
+  </p>
+  <label htmlFor="contacts-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted">
+    <Upload className="w-8 h-8 mb-3 text-muted-foreground mx-auto" />
+    <p className="text-sm text-muted-foreground">{csvFileName || "Click to upload CSV or XLSX"}</p>
+    <Input id="contacts-file" type="file" className="hidden" accept=".csv,.xlsx" onChange={handleFileChange} />
+  </label>
+</div>
+
 
             <div className="space-y-2">
               <Label htmlFor="manual-emails">Add Email(s) Manually</Label>
