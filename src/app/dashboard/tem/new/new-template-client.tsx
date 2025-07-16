@@ -36,15 +36,14 @@ import {
 } from "lucide-react";
 import type { Project } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { createTemplate } from "@/services/api";
+import { createTemplate, fetchProjects, getCurrentUser } from "@/services/api";
 import CodeMirror from "@uiw/react-codemirror";
 import { html } from "@codemirror/lang-html";
 
-interface NewTemplateClientProps {
-  projects: Project[];
-}
+export function NewTemplateClient() {
+  const [projects, setProjects] = React.useState<Project[]>([]);
+  const [userId, setUserId] = React.useState("");
 
-export function NewTemplateClient({ projects }: NewTemplateClientProps) {
   const [projectId, setProjectId] = React.useState("");
   const [templateName, setTemplateName] = React.useState("");
   const [subject, setSubject] = React.useState("");
@@ -57,6 +56,37 @@ export function NewTemplateClient({ projects }: NewTemplateClientProps) {
   const [showLinkInput, setShowLinkInput] = React.useState(false);
   const [linkURL, setLinkURL] = React.useState("");
   const [linkText, setLinkText] = React.useState("");
+
+  const colorOptions = [
+    "#000000",
+    "#FF0000",
+    "#008000",
+    "#0000FF",
+    "#FFA500",
+    "#800080",
+    "#808080",
+    "#008080",
+  ];
+
+  // Fetch projects and user info (role-based access)
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const [user, proj] = await Promise.all([
+          getCurrentUser(),
+          fetchProjects(),
+        ]);
+        setUserId(user._id);
+        setProjects(proj);
+      } catch (err: any) {
+        toast({
+          title: "Error",
+          description: err.message || "Failed to fetch projects",
+          variant: "destructive",
+        });
+      }
+    })();
+  }, []);
 
   const handleSaveTemplate = async () => {
     const contentToSave = isHtmlMode ? htmlContent : rawText;
@@ -81,6 +111,13 @@ export function NewTemplateClient({ projects }: NewTemplateClientProps) {
         title: "Template Saved",
         description: "Your new template has been saved successfully.",
       });
+
+      // Clear form after save (optional)
+      setTemplateName("");
+      setSubject("");
+      setRawText("");
+      setHtmlContent("");
+      setIsHtmlMode(false);
     } catch (error) {
       console.error("Failed to save template", error);
       toast({
@@ -105,18 +142,16 @@ export function NewTemplateClient({ projects }: NewTemplateClientProps) {
     setRawText(newText);
     setTimeout(() => {
       textarea.focus();
-      textarea.setSelectionRange(
-        start + startTag.length,
-        end + startTag.length
-      );
+      textarea.setSelectionRange(start + startTag.length, end + startTag.length);
     }, 0);
   };
 
   const insertBulletList = () => {
     const lines = rawText
       .split("\n")
-      .map((line) => `<li>${line.trim()}</li>`);
-    const wrapped = `<ul>\n${lines.join("\n")}\n</ul>`;
+      .map((line) => `<li>${line.trim()}</li>`)
+      .join("\n");
+    const wrapped = `<ul>\n${lines}\n</ul>`;
     setRawText(wrapped);
   };
 
@@ -146,17 +181,6 @@ export function NewTemplateClient({ projects }: NewTemplateClientProps) {
     }, 0);
   };
 
-  const colorOptions = [
-    "#000000",
-    "#FF0000",
-    "#008000",
-    "#0000FF",
-    "#FFA500",
-    "#800080",
-    "#808080",
-    "#008080",
-  ];
-
   return (
     <Card>
       <CardHeader>
@@ -165,6 +189,7 @@ export function NewTemplateClient({ projects }: NewTemplateClientProps) {
           Fill in the details for your new email template.
         </CardDescription>
       </CardHeader>
+
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -182,6 +207,7 @@ export function NewTemplateClient({ projects }: NewTemplateClientProps) {
               </SelectContent>
             </Select>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="template-name">Template Name</Label>
             <Input
