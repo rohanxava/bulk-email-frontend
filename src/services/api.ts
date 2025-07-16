@@ -203,7 +203,7 @@ export const deleteTemplate = async (id: string) => {
 
 
 export const getTemplateById = async (id: string) => {
-  const res = await fetch(`/api/templates/${id}`, {
+  const res = await fetch(`${BASE_URL}/templates/${id}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${getToken()}`,

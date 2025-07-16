@@ -71,47 +71,47 @@ export default function TemplatesPage() {
                     {templates.map((template) => (
                         <Card key={template._id} className="relative">
                             <CardHeader>
-                                <div className="absolute top-2 right-2 flex gap-2">
-                                    <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        onClick={() => router.push(`/dashboard/tem/${template._id}/edit`)}
-                                    >
-                                        <Pencil className="w-4 h-4" />
-                                    </Button>
-
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                onClick={() => setTemplateToDelete(template)}
-                                            >
-                                                <Trash2 className="w-4 h-4 text-red-500" />
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <CardTitle className="text-lg">{template.name}</CardTitle>
+                                        <CardDescription>{template.subject}</CardDescription>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Link href={`/dashboard/tem/${template._id}/edit`}>
+                                            <Button variant="ghost" size="icon">
+                                                <Pencil className="h-4 w-4 text-muted-foreground" />
                                             </Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>Confirm Delete</DialogTitle>
-                                            </DialogHeader>
-                                            <p className="text-sm text-muted-foreground">
-                                                Are you sure you want to delete the template{" "}
-                                                <strong>{templateToDelete?.name}</strong>?
-                                            </p>
-                                            <div className="flex justify-end mt-4 gap-2">
-                                                <Button variant="outline" onClick={() => setTemplateToDelete(null)}>
-                                                    Cancel
-                                                </Button>
-                                                <Button variant="destructive" onClick={confirmDelete}>
-                                                    Delete
-                                                </Button>
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
-                                </div>
+                                        </Link>
 
-                                <CardTitle className="text-lg">{template.name}</CardTitle>
-                                <CardDescription>{template.subject}</CardDescription>
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    onClick={() => setTemplateToDelete(template)}
+                                                >
+                                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Confirm Delete</DialogTitle>
+                                                </DialogHeader>
+                                                <p className="text-sm text-muted-foreground">
+                                                    Are you sure you want to delete <strong>{template.name}</strong>?
+                                                </p>
+                                                <div className="flex justify-end mt-4 gap-2">
+                                                    <Button variant="outline" onClick={() => setTemplateToDelete(null)}>
+                                                        Cancel
+                                                    </Button>
+                                                    <Button variant="destructive" onClick={confirmDelete}>
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 <p className="text-xs text-muted-foreground">

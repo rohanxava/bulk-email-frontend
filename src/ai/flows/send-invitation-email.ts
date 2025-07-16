@@ -51,7 +51,8 @@ const sendInvitationEmailFlow = ai.defineFlow(
     }
     
     const fromEmail = 'no-reply@example.com'; // TODO: Use a real, verified sender email
-    const loginUrl = 'http://localhost:9002/'; // TODO: Replace with your actual app URL
+    const loginUrl = 'http://localhost:9002/';
+    // http://172.236.172.122  // TODO: Replace with your actual app URL
 
     const emailSubject = `You're invited to Agency MailFlow!`;
     const htmlContent = `
