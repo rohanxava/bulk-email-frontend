@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchProjects, deleteProject } from "../../../services/api";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge"; // Make sure this is imported
+
 import {
   Card,
   CardContent,
@@ -100,15 +102,14 @@ export default function ProjectsPage() {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center space-x-2">
                     <span
-                      className={`h-2 w-2 rounded-full ${
-                        project.sendgridKey ? "bg-green-500" : "bg-destructive"
-                      }`}
+                      className={`h-2 w-2 rounded-full ${project.apiKey ? "bg-green-500" : "bg-destructive"
+                        }`}
                     ></span>
-                    <p className="text-xs text-muted-foreground">
-                      {project.sendgridKey
-                        ? "SendGrid API Key Linked"
-                        : "API Key Required"}
-                    </p>
+                    {project.apiKey ? (
+                      <Badge variant="success">{project.service.toUpperCase()} API Key Linked</Badge>
+                    ) : (
+                      <Badge variant="destructive">API Key Required</Badge>
+                    )}
                   </div>
                 </div>
               </CardContent>

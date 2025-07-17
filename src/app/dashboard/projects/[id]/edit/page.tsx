@@ -7,6 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem
+} from "@/components/ui/select";
+
+import {
   Card,
   CardContent,
   CardDescription,
@@ -21,9 +29,11 @@ export default function EditProjectPage() {
   const [form, setForm] = useState({
     name: "",
     description: "",
-    sendgridKey: "",
+    service: "sendgrid", // default to sendgrid
+    apiKey: "",
     fromEmail: "",
   });
+
   const router = useRouter();
 
   useEffect(() => {
@@ -32,9 +42,11 @@ export default function EditProjectPage() {
       setForm({
         name: data.name || "",
         description: data.description || "",
-        sendgridKey: data.sendgridKey || "",
+        service: data.service || "sendgrid",
+        apiKey: data.apiKey || "",
         fromEmail: data.fromEmail || "",
       });
+
     };
     load();
   }, [id]);
@@ -89,17 +101,35 @@ export default function EditProjectPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="sendgridKey">SendGrid API Key</Label>
+              <Label>Email Service Provider</Label>
+              <Select
+                value={form.service}
+                onValueChange={(value) => setForm({ ...form, service: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a service" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sendgrid">SendGrid</SelectItem>
+                  <SelectItem value="mailchimp">MailChimp</SelectItem>
+                  <SelectItem value="brevo">Brevo (Sendinblue)</SelectItem>
+                  <SelectItem value="klav">Klavio</SelectItem>
+                  <SelectItem value="ses">Amazon SES</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="apiKey">Enter the API Key</Label>
               <Input
-                id="sendgridKey"
+                id="apiKey"
                 type="password"
-                placeholder="Your SendGrid API Key"
-                value={form.sendgridKey}
-                onChange={(e) =>
-                  setForm({ ...form, sendgridKey: e.target.value })
-                }
+                placeholder={` API Key`}
+                value={form.apiKey}
+                onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="fromEmail">From Email</Label>
               <Input
