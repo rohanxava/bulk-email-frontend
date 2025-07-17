@@ -35,6 +35,7 @@ import {
   getCampaignById,
   saveCampaign,
   getCurrentUser,
+  generateTemplateWithAI
 } from "@/services/api";
 import type { Project, Template, Campaign } from "@/lib/types";
 import * as XLSX from "xlsx";
@@ -62,6 +63,8 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
   const { toast } = useToast();
   const rawTextRef = React.useRef<HTMLTextAreaElement>(null);
 
+  const [prompt, setPrompt] = React.useState("");
+  const [isGenerating, setIsGenerating] = React.useState(false);
   const [projects, setProjects] = React.useState<Project[]>([]);
   const [templates, setTemplates] = React.useState<Template[]>([]);
   const [campaignName, setCampaignName] = React.useState("");
@@ -181,6 +184,31 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
     })();
   }, [campaignId]);
 
+
+
+
+  const handleGenerateWithAI = async () => {
+    if (!prompt.trim()) {
+      return toast({ title: "Enter a prompt", description: "AI prompt cannot be empty.", variant: "destructive" });
+    }
+    setIsGenerating(true);
+    try {
+      const result = await generateTemplateWithAI(prompt);
+      setSubject(result.subject);
+      setEmailContent(result.htmlContent);
+      setRawText(result.htmlContent);
+      setIsHtmlMode(true);
+      toast({ title: "AI Template Generated", description: "You can now edit the content." });
+    } catch (err) {
+      console.error(err);
+      toast({ title: "AI Generation Failed", description: "Check console for details.", variant: "destructive" });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -297,7 +325,21 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
               <p className="border rounded px-3 py-2 bg-muted text-sm">{selectedProject?.fromEmail || "N/A"}</p>
             </div>
 
-            <div className="space-y-2"><Label>Campaign Name</Label><Input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} /></div>
+              <div className="space-y-2"><Label>Campaign Name</Label><Input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} /></div>
+
+            <div className="p-4 border rounded-xl bg-gradient-to-br from-indigo-50 to-white shadow-md">
+              <Label className="font-semibold text-indigo-700">✨ Generate Email with AI</Label>
+              <Input
+                placeholder="e.g., Write a festive discount campaign"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                className="mt-2 mb-4"
+              />
+              <Button onClick={handleGenerateWithAI} disabled={isGenerating} className="bg-indigo-600 hover:bg-indigo-700 text-white w-full">
+                {isGenerating ? "Generating..." : "Generate with AI"}
+              </Button>
+            </div>
+
             <div className="space-y-2"><Label>Subject</Label><Input value={subject} onChange={(e) => setSubject(e.target.value)} /></div>
 
             <div className="space-y-2">
@@ -359,19 +401,19 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
           <CardHeader><CardTitle>Configuration</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div>
-  <Label className="block mb-2">
-    Upload Contacts (CSV/XLSX)
-    <span className="text-red-500 ml-1">*</span>
-  </Label>
-  <p className="text-xs text-muted-foreground mb-2">
-    <span className="text-red-500">*</span> The file must contain an <strong>"Email"</strong> column (case-insensitive, no spaces(not even after the header)). Example header: <code>Email</code>
-  </p>
-  <label htmlFor="contacts-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted">
-    <Upload className="w-8 h-8 mb-3 text-muted-foreground mx-auto" />
-    <p className="text-sm text-muted-foreground">{csvFileName || "Click to upload CSV or XLSX"}</p>
-    <Input id="contacts-file" type="file" className="hidden" accept=".csv,.xlsx" onChange={handleFileChange} />
-  </label>
-</div>
+              <Label className="block mb-2">
+                Upload Contacts (CSV/XLSX)
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                <span className="text-red-500">*</span> The file must contain an <strong>"Email"</strong> column (case-insensitive, no spaces(not even after the header)). Example header: <code>Email</code>
+              </p>
+              <label htmlFor="contacts-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted">
+                <Upload className="w-8 h-8 mb-3 text-muted-foreground mx-auto" />
+                <p className="text-sm text-muted-foreground">{csvFileName || "Click to upload CSV or XLSX"}</p>
+                <Input id="contacts-file" type="file" className="hidden" accept=".csv,.xlsx" onChange={handleFileChange} />
+              </label>
+            </div>
 
 
             <div className="space-y-2">

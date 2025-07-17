@@ -52,6 +52,7 @@ const sendInvitationEmailFlow = ai.defineFlow(
     
     const fromEmail = 'no-reply@example.com'; // TODO: Use a real, verified sender email
     const loginUrl = 'https://bulkmail.xavawebservices.com/';// TODO: Replace with your actual app URL
+    // const loginUrl = 'http://localhost:9002/';// TODO: Replace with your actual app URL
 
     const emailSubject = `You're invited to Agency MailFlow!`;
     const htmlContent = `

@@ -367,3 +367,23 @@ export const getUserById = async (id: string) => {
 };
 
 //////////////////////////users////////////////////////////////
+
+
+/////////////////////////OPEN AI////////////////////////////////
+
+export const generateTemplateWithAI = async (prompt: string) => {
+  const res = await fetch(`${BASE_URL}/generate-template`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify({ prompt }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "AI template generation failed");
+  }
+  return res.json(); // { subject, htmlContent }
+};
+
