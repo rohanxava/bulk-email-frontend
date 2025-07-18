@@ -9,8 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PageHeader } from '../page-header';
-import { getUsers, deleteUser, getCurrentUser } from '@/services/api';
+import { getUsers, deleteUser, getCurrentUser, pingUser } from '@/services/api';
 import { formatDistanceToNow } from 'date-fns';
+
 
 const roleVariant = {
   'super_admin': 'default',
@@ -59,6 +60,28 @@ export default function UsersPage() {
       console.error(err);
     }
   };
+
+  React.useEffect(() => {
+    const sendPing = async () => {
+      await pingUser(); // Use service here
+    };
+
+    sendPing(); // Immediate ping
+
+    const interval = setInterval(sendPing, 10000); // Every 10 sec
+
+    window.addEventListener('mousemove', sendPing);
+    window.addEventListener('click', sendPing);
+    window.addEventListener('keydown', sendPing);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('mousemove', sendPing);
+      window.removeEventListener('click', sendPing);
+      window.removeEventListener('keydown', sendPing);
+    };
+  }, []);
+
 
   return (
     <div>
@@ -112,14 +135,15 @@ export default function UsersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={user.isOnline ? 'bg-green-500 text-white' : 'bg-yellow-400 text-black'}>
-                        {user.isOnline ? 'Active' : 'Inactive'}
-                      </Badge>
+                      {Date.now() - new Date(user.lastActive).getTime() < 30000 ? (
+                        <Badge className="bg-green-500 text-white">Active Now</Badge>
+                      ) : (
+                        <Badge className="bg-yellow-400 text-black">Inactive</Badge>
+                      )}
                     </TableCell>
+
                     <TableCell>
-                      {formatDistanceToNow(new Date(user.lastActive || user.createdAt), {
-                        addSuffix: true,
-                      })}
+                      {formatDistanceToNow(new Date(user.lastActive), { addSuffix: true })}
                     </TableCell>
                     <TableCell className="flex gap-2 items-center">
                       {confirmDeleteUserId === user._id ? (

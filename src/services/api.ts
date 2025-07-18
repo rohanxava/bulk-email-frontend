@@ -3,16 +3,16 @@
 import axios from 'axios';
 
 
-const Baseurl = process.env.NEXT_PUBLIC_BASE_URL ;
-const BASE_URL= `${Baseurl}/api`;
-const api = axios.create({
-  baseURL: `${BASE_URL}`,
-});
-
-
+// const Baseurl = process.env.NEXT_PUBLIC_BASE_URL ;
+// const BASE_URL= `${Baseurl}/api`;
 // const api = axios.create({
-//   baseURL: 'http://localhost:5000/api',
+//   baseURL: `${BASE_URL}`,
 // });
+
+
+const api = axios.create({
+  baseURL: 'http://localhost:5000/api',
+});
 
 export default api;
 
@@ -24,7 +24,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 
 
-// const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 const getToken = () => {
   return typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -146,19 +146,38 @@ export const deleteProject = async (id: string) => {
 
 
 /////////////////////////////templates/////////////////////////////////////
-export const createTemplate = async (data: any) => {
-  const res = await fetch(`${BASE_URL}/templates`, {
+
+
+export const createTemplate = async (data) => {
+  const formData = new FormData();
+  formData.append('name', data.name);
+  formData.append('subject', data.subject);
+  formData.append('htmlContent', data.htmlContent);
+  formData.append('projectId', data.projectId);
+
+  if (data.attachment) {
+    formData.append('attachment', data.attachment); // PDF file
+  }
+
+  const token = localStorage.getItem('token'); // Get JWT from storage
+
+  const res = await fetch(`${BASE_URL}/templates?type=template`, {
     method: 'POST',
+    body: formData,
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
+      'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify(data),
   });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || 'Template creation failed');
+  }
+
   return res.json();
 };
 
-// services/api.ts
+
 
 export const getTemplates = async (projectId?: string) => {
   const url = projectId
@@ -179,17 +198,25 @@ export const getTemplates = async (projectId?: string) => {
 };
 
 
-export const updateTemplate = async (id: string, data: any) => {
-  const res = await fetch(`${BASE_URL}/templates/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: JSON.stringify(data),
-  });
-  return res.json();
+export const updateTemplate = async (id, formData) => {
+    const token = localStorage.getItem('token');
+
+    const res = await fetch(`${BASE_URL}/templates/${id}?type=template`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+        body: formData, // FormData supports file uploads
+    });
+
+    if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Template update failed');
+    }
+
+    return res.json();
 };
+
 
 export const deleteTemplate = async (id: string) => {
   const res = await fetch(`${BASE_URL}/templates/${id}`, {
@@ -277,11 +304,14 @@ export const deleteCampaign = async (id: string) => {
 };
 
 // 📌 Send campaign
-export const sendCampaign = async (data: any) => {
+export const sendCampaign = async (data: FormData) => {
   const res = await fetch(`${BASE_URL}/campaign/send`, {
     method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(data),
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+      // ⚠️ Don't set Content-Type for FormData (browser sets boundary automatically)
+    },
+    body: data,
   });
 
   if (!res.ok) {
@@ -386,4 +416,35 @@ export const generateTemplateWithAI = async (prompt: string) => {
   }
   return res.json(); // { subject, htmlContent }
 };
+
+/////////////////////////OPEN AI////////////////////////////////
+
+
+
+
+//////////////////////PING ACTIVE//////////////////////////////
+
+export const pingUser = async () => {
+  const token = localStorage.getItem('token');
+
+  return fetch(`${BASE_URL}/users/ping`, {
+    method: 'POST',
+    // credentials: 'include', // Keep this if you also use cookies (optional)
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}` // ✅ Add token here
+    }
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('Ping failed');
+    return res.json();
+  })
+  .catch(err => {
+    console.error('Ping error:', err);
+  });
+};
+
+
+//////////////////////PING ACTIVE//////////////////////////////
+
 

@@ -22,72 +22,84 @@ export default function EditTemplatePage() {
         name: "",
         subject: "",
         htmlContent: "",
+        attachment: "",
     });
 
     useEffect(() => {
-    const loadData = async () => {
-        console.log("Fetching template with id:", id);
+        const loadData = async () => {
+            console.log("Fetching template with id:", id);
+
+            try {
+                const template = await getTemplateById(id as string);
+                console.log("Template fetched:", template);
+
+                const projectList = await fetchProjects();
+                console.log("Projects fetched:", projectList);
+
+                setProjects(projectList);
+
+                setForm({
+                    projectId: template.projectId,
+                    name: template.name,
+                    subject: template.subject,
+                    htmlContent: template.htmlContent,
+                    attachment: template.attachment || "",
+                });
+
+
+                console.log("Form state set to:", {
+                    projectId: template.projectId,
+                    name: template.name,
+                    subject: template.subject,
+                    htmlContent: template.htmlContent,
+                });
+
+            } catch (error) {
+                console.error("Failed to load template or projects", error);
+                toast({
+                    title: "Error",
+                    description: "Failed to load template data.",
+                    variant: "destructive",
+                });
+            }
+        };
+
+        loadData();
+    }, [id]);
+
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append('name', form.name);
+        formData.append('subject', form.subject);
+        formData.append('htmlContent', form.htmlContent);
+        formData.append('projectId', form.projectId);
+
+        if (form.newAttachment) {
+            formData.append('attachment', form.newAttachment);
+        }
 
         try {
-            const template = await getTemplateById(id as string);
-            console.log("Template fetched:", template);
+            await updateTemplate(id, formData); // Make sure `updateTemplate` accepts FormData now
 
-            const projectList = await fetchProjects();
-            console.log("Projects fetched:", projectList);
-
-            setProjects(projectList);
-
-            setForm({
-                projectId: template.projectId,
-                name: template.name,
-                subject: template.subject,
-                htmlContent: template.htmlContent,
+            toast({
+                title: "Template Updated",
+                description: "Your template has been updated successfully.",
             });
 
-            console.log("Form state set to:", {
-                projectId: template.projectId,
-                name: template.name,
-                subject: template.subject,
-                htmlContent: template.htmlContent,
-            });
-
+            router.push("/dashboard/tem");
         } catch (error) {
-            console.error("Failed to load template or projects", error);
+            console.error("Failed to update template", error);
             toast({
                 title: "Error",
-                description: "Failed to load template data.",
+                description: "Failed to update template.",
                 variant: "destructive",
             });
         }
     };
 
-    loadData();
-}, [id]);
-
-
-    const handleSubmit = async (e: any) => {
-    e.preventDefault();
-
-    console.log("Submitting form with data:", form);
-
-    try {
-        await updateTemplate(id as string, form);
-        console.log("Template update successful");
-
-        toast({
-            title: "Template Updated",
-            description: "Your template has been updated successfully.",
-        });
-        router.push("/dashboard/tem");
-    } catch (error) {
-        console.error("Failed to update template", error);
-        toast({
-            title: "Error",
-            description: "Failed to update template.",
-            variant: "destructive",
-        });
-    }
-};
 
 
     return (
@@ -148,7 +160,29 @@ export default function EditTemplatePage() {
                                 onChange={(e) => setForm({ ...form, htmlContent: e.target.value })}
                             />
                         </div>
-
+                        {form.attachment && (
+                            <div className="space-y-2">
+                                <Label>Current Attachment (PDF)</Label>
+                                <div className="mt-2">
+                                    <a
+                                        href={`http://localhost:5000${form.attachment}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 px-1 py-1 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200"
+                                    >
+                                        📄 View PDF Attachment
+                                    </a>
+                                </div>
+                            </div>
+                        )}
+                        <div className="space-y-2">
+                            <Label>Update Attachment (optional)</Label>
+                            <Input
+                                type="file"
+                                accept="application/pdf"
+                                onChange={(e) => setForm({ ...form, newAttachment: e.target.files?.[0] })}
+                            />
+                        </div>
                         <Button type="submit">Update Template</Button>
                     </form>
                 </CardContent>

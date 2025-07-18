@@ -12,6 +12,7 @@ import {
   Mail,
   Settings,
   Users,
+  List
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -48,6 +49,7 @@ const navItems = [
   { href: "/dashboard/tem", icon: LayoutTemplate, label: "Templates" },
   { href: "/dashboard/reports", icon: AreaChart, label: "Reports" },
   { href: "/dashboard/users", icon: Users, label: "Users" },
+  { href: "/dashboard/Contactlist",icon:List, label: "List"},
 ];
 
 // Settings item

@@ -56,6 +56,7 @@ export function NewTemplateClient() {
   const [isHtmlMode, setIsHtmlMode] = React.useState(false);
   const rawTextRef = React.useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+  const [pdfFile, setPdfFile] = React.useState<File | null>(null);
 
   const [prompt, setPrompt] = React.useState("");
   const [isGenerating, setIsGenerating] = React.useState(false);
@@ -120,6 +121,7 @@ export function NewTemplateClient() {
 
   const handleSaveTemplate = async () => {
     const contentToSave = isHtmlMode ? htmlContent : rawText;
+
     if (!projectId || !templateName || !subject || !contentToSave) {
       toast({
         title: "Missing Fields",
@@ -129,12 +131,22 @@ export function NewTemplateClient() {
       return;
     }
 
+    const formData = new FormData();
+    formData.append("name", templateName);
+    formData.append("subject", subject);
+    formData.append("htmlContent", contentToSave);
+    formData.append("projectId", projectId);
+    if (pdfFile) {
+      formData.append("attachment", pdfFile);
+    }
+
     try {
       await createTemplate({
         name: templateName,
-        subject,
+        subject: subject,
         htmlContent: contentToSave,
-        projectId,
+        projectId: projectId,
+        attachment: pdfFile,
       });
 
       toast({
@@ -147,6 +159,7 @@ export function NewTemplateClient() {
       setRawText("");
       setHtmlContent("");
       setPrompt("");
+      setPdfFile(null);
       setIsHtmlMode(false);
     } catch (error) {
       toast({
@@ -238,8 +251,7 @@ export function NewTemplateClient() {
           </div>
         </div>
 
-        {/* AI Prompt Section - POP OUT STYLE */}
-        <div className="p-4 border-2 rounded-xl bg-gradient-to-br from-indigo-50 to-white shadow-md mb-4 transition-all hover:shadow-lg flex flex-col items-center">
+        <div className="p-4 border-2 rounded-xl bg-gradient-to-br from-indigo-50 to-white shadow-md mb-4 flex flex-col items-center">
           <Label htmlFor="prompt" className="text-indigo-700 font-semibold text-lg mb-2">✨ AI Template Generator</Label>
           <Input
             id="prompt"
@@ -252,10 +264,20 @@ export function NewTemplateClient() {
             variant="secondary"
             onClick={handleGenerateWithAI}
             disabled={isGenerating}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white"
           >
             {isGenerating ? "Generating..." : "Generate with AI"}
           </Button>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="pdf">Attach PDF (optional)</Label>
+          <Input
+            id="pdf"
+            type="file"
+            accept="application/pdf"
+            onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+          />
         </div>
 
         <div className="space-y-2">

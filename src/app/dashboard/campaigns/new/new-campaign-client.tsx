@@ -62,7 +62,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
   const router = useRouter();
   const { toast } = useToast();
   const rawTextRef = React.useRef<HTMLTextAreaElement>(null);
-
+  const [attachmentFile, setAttachmentFile] = React.useState<File | null>(null);
   const [prompt, setPrompt] = React.useState("");
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [projects, setProjects] = React.useState<Project[]>([]);
@@ -232,30 +232,43 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
 
   const handleSendCampaign = async () => {
     const content = isHtmlMode ? emailContent : rawText;
-    if (!campaignName || !subject || !content) return toast({ title: "Missing Fields", description: "All fields required.", variant: "destructive" });
+    if (!campaignName || !subject || !content) {
+      return toast({ title: "Missing Fields", description: "All fields required.", variant: "destructive" });
+    }
+
     const manualList = manualEmails.split(",").map((e) => e.trim()).filter((e) => e.includes("@"));
     const csvEmails = parsedCsvRows.map((r) => {
       const key = Object.keys(r).find((k) => k.toLowerCase() === "email");
       return key ? r[key]?.trim() : null;
     }).filter((e: any) => e && e.includes("@"));
+
     const all = Array.from(new Set([...manualList, ...csvEmails]));
-    if (all.length === 0) return toast({ title: "No Recipients", description: "Provide recipients.", variant: "destructive" });
+    if (all.length === 0) {
+      return toast({ title: "No Recipients", description: "Provide recipients.", variant: "destructive" });
+    }
+
     setIsSending(true);
     try {
       const proj = await fetchProjectById(selectedProjectId);
       const fromEmail = proj.fromEmail || "hello@xavaconnect.com";
-      const result = await sendCampaign({
-        subject,
-        campaignName,
-        htmlContent: content,
-        csvContent: "",
-        manualEmails: all,
-        fromEmail,
-        sendgridKey: proj.sendgridKey!,
-        createdBy: userId,
-        projectId: selectedProjectId,
-        templateId: selectedTemplateId,
-      });
+
+      const formData = new FormData();
+      formData.append("subject", subject);
+      formData.append("campaignName", campaignName);
+      formData.append("htmlContent", content);
+      formData.append("csvContent", ""); // assume empty since we send only emails directly
+      formData.append("manualEmails", all.join(","));
+      formData.append("fromEmail", fromEmail);
+      formData.append("sendgridKey", proj.sendgridKey!);
+      formData.append("createdBy", userId);
+      formData.append("projectId", selectedProjectId);
+      formData.append("templateId", selectedTemplateId);
+      if (attachmentFile) {
+        formData.append("attachment", attachmentFile);
+      }
+
+      const result = await sendCampaign(formData); // this should be handled via FormData on backend
+
       if (result.success) {
         toast({ title: "Campaign Sent", description: `${result.emailsSent} emails sent.` });
         router.push("/dashboard/campaigns");
@@ -269,6 +282,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
       setIsSending(false);
     }
   };
+
 
   const handleSaveDraft = async () => {
     const content = isHtmlMode ? emailContent : rawText;
@@ -325,7 +339,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
               <p className="border rounded px-3 py-2 bg-muted text-sm">{selectedProject?.fromEmail || "N/A"}</p>
             </div>
 
-              <div className="space-y-2"><Label>Campaign Name</Label><Input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} /></div>
+            <div className="space-y-2"><Label>Campaign Name</Label><Input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} /></div>
 
             <div className="p-4 border rounded-xl bg-gradient-to-br from-indigo-50 to-white shadow-md">
               <Label className="font-semibold text-indigo-700">✨ Generate Email with AI</Label>
@@ -424,6 +438,16 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
                 placeholder="Enter comma-separated emails"
                 value={manualEmails}
                 onChange={(e) => setManualEmails(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="attachment">Attach PDF (optional)</Label>
+              <Input
+                id="attachment"
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
               />
             </div>
 
