@@ -274,8 +274,13 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
 
     // Collect selected contact list emails
     const listEmails = selectedListContacts
-      .map((c) => c.email?.trim())
-      .filter((e) => e && e.includes("@"));
+      .map((c) => ({
+        firstName: c.firstName?.trim(),
+        lastName: c.lastName?.trim(),
+        email: c.email?.trim(),
+      }))
+      .filter((contact) => contact.email && contact.email.includes("@"));
+
 
     // Merge all unique emails
     const allEmails = Array.from(new Set([...manualList, ...csvEmails, ...listEmails]));
@@ -298,7 +303,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
       formData.append("subject", subject);
       formData.append("campaignName", campaignName);
       formData.append("htmlContent", content);
-      formData.append("csvContent", csvContent || ""); 
+      formData.append("csvContent", csvContent || "");
       formData.append("manualEmails", allEmails.join(","));
       formData.append("fromEmail", fromEmail);
       formData.append("sendgridKey", proj.sendgridKey!);
