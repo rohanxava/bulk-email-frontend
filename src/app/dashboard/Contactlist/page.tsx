@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
 import {
   Table,
   TableBody,
@@ -80,6 +79,8 @@ export default function ContactListPage() {
   const [fileToUpload, setFileToUpload] = React.useState<File | null>(null);
   const [isUploading, setIsUploading] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [listToDelete, setListToDelete] = React.useState<ContactList | null>(null);
 
   const fetchLists = async () => {
     try {
@@ -209,82 +210,80 @@ export default function ContactListPage() {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
-  <DialogHeader>
-    <DialogTitle>Upload New Contact List</DialogTitle>
-    <DialogDescription>
-      Upload a CSV or XLSX file and give your list a name.
-    </DialogDescription>
-  </DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Upload New Contact List</DialogTitle>
+              <DialogDescription>
+                Upload a CSV or XLSX file and give your list a name.
+              </DialogDescription>
+            </DialogHeader>
 
-  {/* Matching Logic Note */}
-  <Card className="bg-muted p-4 mb-4">
-    <CardTitle className="text-base">Note:</CardTitle>
-    <CardDescription className="text-sm mt-2">
-      The system automatically matches the following fields from your uploaded file:
-      <ul className="list-disc list-inside mt-2 space-y-1">
-        <li><strong>First Name</strong>: firstName, first_name, FirstName</li>
-        <li><strong>Last Name</strong>: lastName, last_name, LastName</li>
-        <li><strong>Email</strong>: email, Email (Required)</li>
-      </ul>
-      <p className="mt-2">
-        Rows without a valid email address will be skipped automatically.
-      </p>
-    </CardDescription>
-  </Card>
+            <Card className="bg-muted p-4 mb-4">
+              <CardTitle className="text-base">Note:</CardTitle>
+              <CardDescription className="text-sm mt-2">
+                The system automatically matches the following fields from your uploaded file:
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li><strong>First Name</strong>: firstName, first_name, FirstName</li>
+                  <li><strong>Last Name</strong>: lastName, last_name, LastName</li>
+                  <li><strong>Email</strong>: email, Email (Required)</li>
+                </ul>
+                <p className="mt-2">
+                  Rows without a valid email address will be skipped automatically.
+                </p>
+              </CardDescription>
+            </Card>
 
-  <div className="grid gap-4 py-4">
-    <div className="grid grid-cols-4 items-center gap-4">
-      <Label htmlFor="list-name" className="text-right">
-        List Name
-      </Label>
-      <Input
-        id="list-name"
-        value={newListName}
-        onChange={(e) => setNewListName(e.target.value)}
-        className="col-span-3"
-        placeholder="e.g., Newsletter Subscribers"
-        disabled={isUploading}
-      />
-    </div>
-    <div className="grid grid-cols-4 items-center gap-4">
-      <Label className="text-right">File</Label>
-      <div className="col-span-3">
-        <label
-          htmlFor="contacts-file"
-          className="flex w-full items-center justify-center rounded-lg border-2 border-dashed bg-card p-4 text-center text-sm text-muted-foreground hover:bg-muted cursor-pointer"
-        >
-          {fileToUpload ? (
-            <span className="truncate">{fileToUpload.name}</span>
-          ) : (
-            <>
-              <Upload className="mr-2 h-4 w-4" />
-              <span>Click to upload (CSV, XLSX)</span>
-            </>
-          )}
-        </label>
-        <Input
-          id="contacts-file"
-          type="file"
-          className="hidden"
-          accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-          onChange={handleFileChange}
-          disabled={isUploading}
-        />
-      </div>
-    </div>
-  </div>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="list-name" className="text-right">
+                  List Name
+                </Label>
+                <Input
+                  id="list-name"
+                  value={newListName}
+                  onChange={(e) => setNewListName(e.target.value)}
+                  className="col-span-3"
+                  placeholder="e.g., Newsletter Subscribers"
+                  disabled={isUploading}
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">File</Label>
+                <div className="col-span-3">
+                  <label
+                    htmlFor="contacts-file"
+                    className="flex w-full items-center justify-center rounded-lg border-2 border-dashed bg-card p-4 text-center text-sm text-muted-foreground hover:bg-muted cursor-pointer"
+                  >
+                    {fileToUpload ? (
+                      <span className="truncate">{fileToUpload.name}</span>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        <span>Click to upload (CSV, XLSX)</span>
+                      </>
+                    )}
+                  </label>
+                  <Input
+                    id="contacts-file"
+                    type="file"
+                    className="hidden"
+                    accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    onChange={handleFileChange}
+                    disabled={isUploading}
+                  />
+                </div>
+              </div>
+            </div>
 
-  <DialogFooter>
-    <Button
-      onClick={handleFileUpload}
-      disabled={isUploading || !fileToUpload || !newListName}
-    >
-      {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-      Save List
-    </Button>
-  </DialogFooter>
-</DialogContent>
-
+            <DialogFooter>
+              <Button
+                onClick={handleFileUpload}
+                disabled={isUploading || !fileToUpload || !newListName}
+              >
+                {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save List
+              </Button>
+            </DialogFooter>
+          </DialogContent>
         </Dialog>
       </PageHeader>
 
@@ -312,31 +311,56 @@ export default function ContactListPage() {
               <TableBody>
                 {lists.length > 0 ? (
                   lists.map((list) => (
-  <TooltipProvider key={list._id}>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <TableRow
-          onClick={() => {
-            setSelectedList(list);
-            setPreviewDialogOpen(true);
-          }}
-          className="cursor-pointer hover:bg-muted transition"
-        >
-          <TableCell className="font-medium">{list.name}</TableCell>
-          <TableCell>{list.fileName}</TableCell>
-          <TableCell className="text-center">{list.contacts.length}</TableCell>
-          <TableCell>{format(new Date(list.createdAt), 'PPP')}</TableCell>
-          <TableCell className="text-right">...</TableCell>
-        </TableRow>
-      </TooltipTrigger>
-
-      <TooltipContent side="top" align="center">
-        Click to preview contacts
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
-))
-
+                    <TooltipProvider key={list._id}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <TableRow
+                            onClick={(e) => {
+                              if ((e.target as HTMLElement).closest('[data-no-preview]')) return;
+                              setSelectedList(list);
+                              setPreviewDialogOpen(true);
+                            }}
+                            className="cursor-pointer hover:bg-muted transition"
+                          >
+                            <TableCell className="font-medium">{list.name}</TableCell>
+                            <TableCell>{list.fileName}</TableCell>
+                            <TableCell className="text-center">{list.contacts.length}</TableCell>
+                            <TableCell>{format(new Date(list.createdAt), 'PPP')}</TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild data-no-preview>
+                                  <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem data-no-preview
+                                    onClick={() => handleDownload(list)}
+                                  >
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem data-no-preview
+                                    onClick={() => {
+                                      setListToDelete(list);
+                                      setIsDeleteDialogOpen(true);
+                                    }}
+                                    className="text-destructive"
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="center">
+                          Click to preview contacts
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ))
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center h-24">
@@ -350,14 +374,11 @@ export default function ContactListPage() {
         </CardContent>
       </Card>
 
-      {/* Contact Preview Dialog */}
+      {/* Preview Dialog */}
       <Dialog open={isPreviewDialogOpen} onOpenChange={setPreviewDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Contact Preview: {selectedList?.name}</DialogTitle>
-            {/* <DialogDescription>
-              Showing the first 100 contacts from {selectedList?.fileName}.
-            </DialogDescription> */}
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto">
             <Table>
@@ -379,6 +400,36 @@ export default function ContactListPage() {
               </TableBody>
             </Table>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">{listToDelete?.name}</span>? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (listToDelete) {
+                  await handleDelete(listToDelete._id);
+                  setIsDeleteDialogOpen(false);
+                  setListToDelete(null);
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
