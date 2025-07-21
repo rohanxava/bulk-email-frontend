@@ -3,16 +3,16 @@
 import axios from 'axios';
 
 
-// const Baseurl = process.env.NEXT_PUBLIC_BASE_URL ;
-// const BASE_URL= `${Baseurl}/api`;
-// const api = axios.create({
-//   baseURL: `${BASE_URL}`,
-// });
-
-
+const Baseurl = process.env.NEXT_PUBLIC_BASE_URL ;
+const BASE_URL= `${Baseurl}/api`;
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: `${BASE_URL}`,
 });
+
+
+// const api = axios.create({
+//   baseURL: 'http://localhost:5000/api',
+// });
 
 export default api;
 
@@ -24,7 +24,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+// const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 const getToken = () => {
   return typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -448,3 +448,54 @@ export const pingUser = async () => {
 //////////////////////PING ACTIVE//////////////////////////////
 
 
+export const uploadContactList = async (formData: FormData) => {
+  const res = await fetch(`${BASE_URL}/lists/upload`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${getToken()}`
+      // Do NOT set Content-Type for FormData
+    },
+    body: formData
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Failed to upload contact list');
+  }
+
+  return res.json(); // returns saved contact list
+};
+
+export const getContactLists = async () => {
+  const res = await fetch(`${BASE_URL}/lists`, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) throw new Error('Failed to fetch contact lists');
+  return res.json();
+};
+
+export const deleteContactList = async (id: string) => {
+  const res = await fetch(`${BASE_URL}/lists/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) throw new Error('Failed to delete contact list');
+  return res.json();
+};
+
+export const downloadContactList = async (id: string) => {
+  const res = await fetch(`${BASE_URL}/lists/download/${id}`, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) throw new Error('Failed to download contact list');
+  return res.blob(); // returns file
+};

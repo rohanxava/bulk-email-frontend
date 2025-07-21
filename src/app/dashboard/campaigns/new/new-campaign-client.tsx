@@ -35,7 +35,8 @@ import {
   getCampaignById,
   saveCampaign,
   getCurrentUser,
-  generateTemplateWithAI
+  generateTemplateWithAI,
+  getContactLists
 } from "@/services/api";
 import type { Project, Template, Campaign } from "@/lib/types";
 import * as XLSX from "xlsx";
@@ -82,6 +83,9 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
   const [selectedTemplateId, setSelectedTemplateId] = React.useState<string>("");
   const [userId, setUserId] = React.useState("");
   const [isHtmlMode, setIsHtmlMode] = React.useState(false);
+  const [contactLists, setContactLists] = React.useState<any[]>([]);
+  const [selectedListId, setSelectedListId] = React.useState<string>("");
+  const [selectedListContacts, setSelectedListContacts] = React.useState<any[]>([]);
 
   const [showLinkInput, setShowLinkInput] = React.useState(false);
   const [linkURL, setLinkURL] = React.useState("");
@@ -127,6 +131,19 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
   };
 
   const applyColor = (color: string) => wrapSelectedText(`<span style="color:${color}">`, "</span>");
+
+
+ React.useEffect(() => {
+  (async () => {
+    try {
+      const lists = await getContactLists();
+      setContactLists(lists);
+    } catch (err) {
+      console.error("Error fetching contact lists:", err);
+    }
+  })();
+}, []);
+
 
   React.useEffect(() => {
     (async () => {
@@ -310,6 +327,15 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
     }
   };
 
+
+  const handleListSelection = (listId: string) => {
+  setSelectedListId(listId);
+  const list = contactLists.find((l) => l._id === listId);
+  if (list) {
+    setSelectedListContacts(list.contacts);
+  }
+};
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
       {/* Left Side */}
@@ -428,6 +454,50 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
                 <Input id="contacts-file" type="file" className="hidden" accept=".csv,.xlsx" onChange={handleFileChange} />
               </label>
             </div>
+
+
+            <div className="space-y-2">
+  <Label>Select Uploaded Contact List</Label>
+  <Select value={selectedListId} onValueChange={handleListSelection}>
+    <SelectTrigger>
+      <SelectValue placeholder="Choose a contact list" />
+    </SelectTrigger>
+    <SelectContent>
+      {contactLists.map((list) => (
+        <SelectItem key={list._id} value={list._id}>
+          {list.name} ({list.contacts.length} contacts)
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
+
+{selectedListContacts.length > 0 && (
+  <div className="overflow-x-auto max-h-64 border rounded-md mt-4">
+    <table className="min-w-full text-sm text-left table-auto border-collapse">
+      <thead className="bg-muted sticky top-0">
+        <tr>
+          <th className="px-3 py-2 border-b font-semibold">First Name</th>
+          <th className="px-3 py-2 border-b font-semibold">Last Name</th>
+          <th className="px-3 py-2 border-b font-semibold">Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        {selectedListContacts.map((contact, i) => (
+          <tr key={i} className="odd:bg-muted/30 even:bg-muted/10">
+            <td className="px-3 py-1 border-b">{contact.firstName || "-"}</td>
+            <td className="px-3 py-1 border-b">{contact.lastName || "-"}</td>
+            <td className="px-3 py-1 border-b">{contact.email}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    <p className="text-xs px-2 pt-1 text-muted-foreground">
+      Showing {selectedListContacts.length} contacts from selected list.
+    </p>
+  </div>
+)}
+
 
 
             <div className="space-y-2">
