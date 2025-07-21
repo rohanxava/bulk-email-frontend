@@ -298,13 +298,15 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
       formData.append("subject", subject);
       formData.append("campaignName", campaignName);
       formData.append("htmlContent", content);
-      formData.append("csvContent", ""); // No CSV content since we're merging emails
+      formData.append("csvContent", csvContent || ""); 
       formData.append("manualEmails", allEmails.join(","));
       formData.append("fromEmail", fromEmail);
       formData.append("sendgridKey", proj.sendgridKey!);
       formData.append("createdBy", userId);
       formData.append("projectId", selectedProjectId);
       formData.append("templateId", selectedTemplateId);
+      formData.append("listContacts", JSON.stringify(selectedListContacts));
+
 
       if (attachmentFile) {
         formData.append("attachment", attachmentFile);
@@ -559,64 +561,64 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
             </div>
 
             {parsedCsvRows.length > 0 && (
-  <>
-    <div className="overflow-x-auto max-h-64 border rounded-md">
-      <table className="min-w-full text-sm text-left table-auto border-collapse">
-        <thead className="bg-muted sticky top-0">
-          <tr>
-            {Object.keys(parsedCsvRows[0] || {}).map((k) => (
-              <th key={k} className="px-3 py-2 border-b font-semibold">{k}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {parsedCsvRows.slice(0, 10).map((r, i) => (
-            <tr key={i} className="odd:bg-muted/30 even:bg-muted/10">
-              {Object.values(r).map((v, j) => (
-                <td key={j} className="px-3 py-1 border-b">{v}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="text-xs px-2 pt-1 text-muted-foreground">
-        Showing first 10 rows.
-        <button
-          className="text-blue-500 underline ml-2"
-          onClick={() => setShowFullCsvDialog(true)}
-        >
-          View All
-        </button>
-      </p>
-    </div>
+              <>
+                <div className="overflow-x-auto max-h-64 border rounded-md">
+                  <table className="min-w-full text-sm text-left table-auto border-collapse">
+                    <thead className="bg-muted sticky top-0">
+                      <tr>
+                        {Object.keys(parsedCsvRows[0] || {}).map((k) => (
+                          <th key={k} className="px-3 py-2 border-b font-semibold">{k}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {parsedCsvRows.slice(0, 10).map((r, i) => (
+                        <tr key={i} className="odd:bg-muted/30 even:bg-muted/10">
+                          {Object.values(r).map((v, j) => (
+                            <td key={j} className="px-3 py-1 border-b">{v}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="text-xs px-2 pt-1 text-muted-foreground">
+                    Showing first 10 rows.
+                    <button
+                      className="text-blue-500 underline ml-2"
+                      onClick={() => setShowFullCsvDialog(true)}
+                    >
+                      View All
+                    </button>
+                  </p>
+                </div>
 
-    <Dialog open={showFullCsvDialog} onOpenChange={setShowFullCsvDialog}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
-        <DialogHeader><DialogTitle>Full CSV/XLSX Preview</DialogTitle></DialogHeader>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm text-left table-auto border-collapse">
-            <thead className="bg-muted sticky top-0">
-              <tr>
-                {Object.keys(parsedCsvRows[0] || {}).map((k) => (
-                  <th key={k} className="px-3 py-2 border-b font-semibold">{k}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {parsedCsvRows.map((r, i) => (
-                <tr key={i} className="odd:bg-muted/30 even:bg-muted/10">
-                  {Object.values(r).map((v, j) => (
-                    <td key={j} className="px-3 py-1 border-b">{v}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </DialogContent>
-    </Dialog>
-  </>
-)}
+                <Dialog open={showFullCsvDialog} onOpenChange={setShowFullCsvDialog}>
+                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+                    <DialogHeader><DialogTitle>Full CSV/XLSX Preview</DialogTitle></DialogHeader>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full text-sm text-left table-auto border-collapse">
+                        <thead className="bg-muted sticky top-0">
+                          <tr>
+                            {Object.keys(parsedCsvRows[0] || {}).map((k) => (
+                              <th key={k} className="px-3 py-2 border-b font-semibold">{k}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {parsedCsvRows.map((r, i) => (
+                            <tr key={i} className="odd:bg-muted/30 even:bg-muted/10">
+                              {Object.values(r).map((v, j) => (
+                                <td key={j} className="px-3 py-1 border-b">{v}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </>
+            )}
 
           </CardContent>
         </Card>
