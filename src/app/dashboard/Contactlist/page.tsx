@@ -9,6 +9,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 import {
   Table,
   TableBody,
@@ -310,53 +312,31 @@ export default function ContactListPage() {
               <TableBody>
                 {lists.length > 0 ? (
                   lists.map((list) => (
-                    <TableRow
-                      key={list._id}
-                      onClick={() => {
-                        setSelectedList(list);
-                        setPreviewDialogOpen(true);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <TableCell className="font-medium">{list.name}</TableCell>
-                      <TableCell>{list.fileName}</TableCell>
-                      <TableCell className="text-center">
-                        {list.contacts.length.toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(list.createdAt), 'PPP')}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <DropdownMenuItem onClick={() => handleDownload(list)}>
-                              <Download className="mr-2 h-4 w-4" />
-                              Download
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDelete(list._id)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
+  <TooltipProvider key={list._id}>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <TableRow
+          onClick={() => {
+            setSelectedList(list);
+            setPreviewDialogOpen(true);
+          }}
+          className="cursor-pointer hover:bg-muted transition"
+        >
+          <TableCell className="font-medium">{list.name}</TableCell>
+          <TableCell>{list.fileName}</TableCell>
+          <TableCell className="text-center">{list.contacts.length}</TableCell>
+          <TableCell>{format(new Date(list.createdAt), 'PPP')}</TableCell>
+          <TableCell className="text-right">...</TableCell>
+        </TableRow>
+      </TooltipTrigger>
+
+      <TooltipContent side="top" align="center">
+        Click to preview contacts
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+))
+
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center h-24">

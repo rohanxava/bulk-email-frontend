@@ -86,7 +86,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
   const [contactLists, setContactLists] = React.useState<any[]>([]);
   const [selectedListId, setSelectedListId] = React.useState<string>("");
   const [selectedListContacts, setSelectedListContacts] = React.useState<any[]>([]);
-
+  const [showFullCsvDialog, setShowFullCsvDialog] = React.useState(false);
   const [showLinkInput, setShowLinkInput] = React.useState(false);
   const [linkURL, setLinkURL] = React.useState("");
   const [linkText, setLinkText] = React.useState("");
@@ -133,16 +133,16 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
   const applyColor = (color: string) => wrapSelectedText(`<span style="color:${color}">`, "</span>");
 
 
- React.useEffect(() => {
-  (async () => {
-    try {
-      const lists = await getContactLists();
-      setContactLists(lists);
-    } catch (err) {
-      console.error("Error fetching contact lists:", err);
-    }
-  })();
-}, []);
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const lists = await getContactLists();
+        setContactLists(lists);
+      } catch (err) {
+        console.error("Error fetching contact lists:", err);
+      }
+    })();
+  }, []);
 
 
   React.useEffect(() => {
@@ -249,22 +249,47 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
 
   const handleSendCampaign = async () => {
     const content = isHtmlMode ? emailContent : rawText;
+
     if (!campaignName || !subject || !content) {
-      return toast({ title: "Missing Fields", description: "All fields required.", variant: "destructive" });
+      return toast({
+        title: "Missing Fields",
+        description: "All fields required.",
+        variant: "destructive",
+      });
     }
 
-    const manualList = manualEmails.split(",").map((e) => e.trim()).filter((e) => e.includes("@"));
-    const csvEmails = parsedCsvRows.map((r) => {
-      const key = Object.keys(r).find((k) => k.toLowerCase() === "email");
-      return key ? r[key]?.trim() : null;
-    }).filter((e: any) => e && e.includes("@"));
+    // Collect manual emails
+    const manualList = manualEmails
+      .split(",")
+      .map((e) => e.trim())
+      .filter((e) => e.includes("@"));
 
-    const all = Array.from(new Set([...manualList, ...csvEmails]));
-    if (all.length === 0) {
-      return toast({ title: "No Recipients", description: "Provide recipients.", variant: "destructive" });
+    // Collect CSV emails
+    const csvEmails = parsedCsvRows
+      .map((r) => {
+        const key = Object.keys(r).find((k) => k.toLowerCase() === "email");
+        return key ? r[key]?.trim() : null;
+      })
+      .filter((e: any) => e && e.includes("@"));
+
+    // Collect selected contact list emails
+    const listEmails = selectedListContacts
+      .map((c) => c.email?.trim())
+      .filter((e) => e && e.includes("@"));
+
+    // Merge all unique emails
+    const allEmails = Array.from(new Set([...manualList, ...csvEmails, ...listEmails]));
+
+    if (allEmails.length === 0) {
+      return toast({
+        title: "No Recipients",
+        description: "Provide at least one recipient.",
+        variant: "destructive",
+      });
     }
 
     setIsSending(true);
+
     try {
       const proj = await fetchProjectById(selectedProjectId);
       const fromEmail = proj.fromEmail || "hello@xavaconnect.com";
@@ -273,33 +298,45 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
       formData.append("subject", subject);
       formData.append("campaignName", campaignName);
       formData.append("htmlContent", content);
-      formData.append("csvContent", ""); // assume empty since we send only emails directly
-      formData.append("manualEmails", all.join(","));
+      formData.append("csvContent", ""); // No CSV content since we're merging emails
+      formData.append("manualEmails", allEmails.join(","));
       formData.append("fromEmail", fromEmail);
       formData.append("sendgridKey", proj.sendgridKey!);
       formData.append("createdBy", userId);
       formData.append("projectId", selectedProjectId);
       formData.append("templateId", selectedTemplateId);
+
       if (attachmentFile) {
         formData.append("attachment", attachmentFile);
       }
 
-      const result = await sendCampaign(formData); // this should be handled via FormData on backend
+      const result = await sendCampaign(formData);
 
       if (result.success) {
-        toast({ title: "Campaign Sent", description: `${result.emailsSent} emails sent.` });
+        toast({
+          title: "Campaign Sent",
+          description: `${result.emailsSent} emails sent successfully.`,
+        });
         router.push("/dashboard/campaigns");
       } else {
-        toast({ title: "Failed", description: result.error, variant: "destructive" });
+        toast({
+          title: "Failed",
+          description: result.error,
+          variant: "destructive",
+        });
       }
+
     } catch (err) {
       console.error(err);
-      toast({ title: "Error", description: "Send failed. Check console.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Send failed. Check console.",
+        variant: "destructive",
+      });
     } finally {
       setIsSending(false);
     }
   };
-
 
   const handleSaveDraft = async () => {
     const content = isHtmlMode ? emailContent : rawText;
@@ -329,12 +366,12 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
 
 
   const handleListSelection = (listId: string) => {
-  setSelectedListId(listId);
-  const list = contactLists.find((l) => l._id === listId);
-  if (list) {
-    setSelectedListContacts(list.contacts);
-  }
-};
+    setSelectedListId(listId);
+    const list = contactLists.find((l) => l._id === listId);
+    if (list) {
+      setSelectedListContacts(list.contacts);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -457,46 +494,46 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
 
 
             <div className="space-y-2">
-  <Label>Select Uploaded Contact List</Label>
-  <Select value={selectedListId} onValueChange={handleListSelection}>
-    <SelectTrigger>
-      <SelectValue placeholder="Choose a contact list" />
-    </SelectTrigger>
-    <SelectContent>
-      {contactLists.map((list) => (
-        <SelectItem key={list._id} value={list._id}>
-          {list.name} ({list.contacts.length} contacts)
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-</div>
+              <Label>Select Uploaded Contact List</Label>
+              <Select value={selectedListId} onValueChange={handleListSelection}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a contact list" />
+                </SelectTrigger>
+                <SelectContent>
+                  {contactLists.map((list) => (
+                    <SelectItem key={list._id} value={list._id}>
+                      {list.name} ({list.contacts.length} contacts)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-{selectedListContacts.length > 0 && (
-  <div className="overflow-x-auto max-h-64 border rounded-md mt-4">
-    <table className="min-w-full text-sm text-left table-auto border-collapse">
-      <thead className="bg-muted sticky top-0">
-        <tr>
-          <th className="px-3 py-2 border-b font-semibold">First Name</th>
-          <th className="px-3 py-2 border-b font-semibold">Last Name</th>
-          <th className="px-3 py-2 border-b font-semibold">Email</th>
-        </tr>
-      </thead>
-      <tbody>
-        {selectedListContacts.map((contact, i) => (
-          <tr key={i} className="odd:bg-muted/30 even:bg-muted/10">
-            <td className="px-3 py-1 border-b">{contact.firstName || "-"}</td>
-            <td className="px-3 py-1 border-b">{contact.lastName || "-"}</td>
-            <td className="px-3 py-1 border-b">{contact.email}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-    <p className="text-xs px-2 pt-1 text-muted-foreground">
-      Showing {selectedListContacts.length} contacts from selected list.
-    </p>
-  </div>
-)}
+            {selectedListContacts.length > 0 && (
+              <div className="overflow-x-auto max-h-64 border rounded-md mt-4">
+                <table className="min-w-full text-sm text-left table-auto border-collapse">
+                  <thead className="bg-muted sticky top-0">
+                    <tr>
+                      <th className="px-3 py-2 border-b font-semibold">First Name</th>
+                      <th className="px-3 py-2 border-b font-semibold">Last Name</th>
+                      <th className="px-3 py-2 border-b font-semibold">Email</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedListContacts.map((contact, i) => (
+                      <tr key={i} className="odd:bg-muted/30 even:bg-muted/10">
+                        <td className="px-3 py-1 border-b">{contact.firstName || "-"}</td>
+                        <td className="px-3 py-1 border-b">{contact.lastName || "-"}</td>
+                        <td className="px-3 py-1 border-b">{contact.email}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="text-xs px-2 pt-1 text-muted-foreground">
+                  Showing {selectedListContacts.length} contacts from selected list.
+                </p>
+              </div>
+            )}
 
 
 
@@ -522,22 +559,65 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
             </div>
 
             {parsedCsvRows.length > 0 && (
-              <div className="overflow-x-auto max-h-64 border rounded-md">
-                <table className="min-w-full text-sm text-left table-auto border-collapse">
-                  <thead className="bg-muted sticky top-0">
-                    <tr>{Object.keys(parsedCsvRows[0] || {}).map((k) => <th key={k} className="px-3 py-2 border-b font-semibold">{k}</th>)}</tr>
-                  </thead>
-                  <tbody>
-                    {parsedCsvRows.slice(0, 10).map((r, i) => (
-                      <tr key={i} className="odd:bg-muted/30 even:bg-muted/10">
-                        {Object.values(r).map((v, j) => <td key={j} className="px-3 py-1 border-b">{v}</td>)}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <p className="text-xs px-2 pt-1 text-muted-foreground">Showing first 10 rows.</p>
-              </div>
-            )}
+  <>
+    <div className="overflow-x-auto max-h-64 border rounded-md">
+      <table className="min-w-full text-sm text-left table-auto border-collapse">
+        <thead className="bg-muted sticky top-0">
+          <tr>
+            {Object.keys(parsedCsvRows[0] || {}).map((k) => (
+              <th key={k} className="px-3 py-2 border-b font-semibold">{k}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {parsedCsvRows.slice(0, 10).map((r, i) => (
+            <tr key={i} className="odd:bg-muted/30 even:bg-muted/10">
+              {Object.values(r).map((v, j) => (
+                <td key={j} className="px-3 py-1 border-b">{v}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="text-xs px-2 pt-1 text-muted-foreground">
+        Showing first 10 rows.
+        <button
+          className="text-blue-500 underline ml-2"
+          onClick={() => setShowFullCsvDialog(true)}
+        >
+          View All
+        </button>
+      </p>
+    </div>
+
+    <Dialog open={showFullCsvDialog} onOpenChange={setShowFullCsvDialog}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+        <DialogHeader><DialogTitle>Full CSV/XLSX Preview</DialogTitle></DialogHeader>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm text-left table-auto border-collapse">
+            <thead className="bg-muted sticky top-0">
+              <tr>
+                {Object.keys(parsedCsvRows[0] || {}).map((k) => (
+                  <th key={k} className="px-3 py-2 border-b font-semibold">{k}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {parsedCsvRows.map((r, i) => (
+                <tr key={i} className="odd:bg-muted/30 even:bg-muted/10">
+                  {Object.values(r).map((v, j) => (
+                    <td key={j} className="px-3 py-1 border-b">{v}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </>
+)}
+
           </CardContent>
         </Card>
 
