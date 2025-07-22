@@ -76,7 +76,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
   const [csvFileName, setCsvFileName] = React.useState<string | null>(null);
   const [parsedCsvRows, setParsedCsvRows] = React.useState<any[]>([]);
   const [manualEmails, setManualEmails] = React.useState<string>("");
-
+  const [showFullContactDialog, setShowFullContactDialog] = React.useState(false);
   const [isSending, setIsSending] = React.useState(false);
   const [isSavingDraft, setIsSavingDraft] = React.useState(false);
   const [selectedProjectId, setSelectedProjectId] = React.useState<string>("");
@@ -86,9 +86,10 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
   const [contactLists, setContactLists] = React.useState<any[]>([]);
   const [selectedListId, setSelectedListId] = React.useState<string>("");
   const [selectedListContacts, setSelectedListContacts] = React.useState<any[]>([]);
-  const [showFullCsvDialog, setShowFullCsvDialog] = React.useState(false);
   const [showLinkInput, setShowLinkInput] = React.useState(false);
   const [linkURL, setLinkURL] = React.useState("");
+  const [showFullCsvDialog, setShowFullCsvDialog] = React.useState(false);
+  const [showFullContactListDialog, setShowFullContactListDialog] = React.useState(false);
   const [linkText, setLinkText] = React.useState("");
 
   const selectedProject = projects.find((p) => p._id === selectedProjectId);
@@ -168,40 +169,49 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
   React.useEffect(() => {
     if (!selectedTemplateId) return;
     const t = templates.find((x) => x._id === selectedTemplateId);
+    console.log("📄 Selected Template Details:", t); // <-- Console log added
+
     if (t) {
       setSubject(t.subject);
       setEmailContent(t.htmlContent);
       setRawText(t.htmlContent);
+      setAttachmentFile(t.attachment);
     }
   }, [selectedTemplateId, templates]);
 
-  React.useEffect(() => {
-    if (!campaignId) return;
-    (async () => {
-      const c = await getCampaignById(campaignId);
-      setCampaignName(c.campaignName || "");
-      setSubject(c.subject || "");
-      setEmailContent(c.htmlContent || "");
-      setRawText(c.htmlContent || "");
-      setSelectedProjectId(c.projectId);
-      setSelectedTemplateId(c.templateId);
-      let emails: string[] = Array.isArray(c.manualEmails) ? c.manualEmails : [];
-      if (c.csvContent) {
-        setCsvContent(c.csvContent);
-        setCsvFileName("Previously uploaded CSV");
-        const parsed = Papa.parse(c.csvContent, { header: true });
-        setParsedCsvRows(parsed.data);
-        const csvEmails = parsed.data.map((r: any) => {
-          const key = Object.keys(r).find((k) => k.toLowerCase() === "email");
-          return key ? r[key]?.trim() : null;
-        }).filter((e: any) => e && e.includes("@"));
-        emails = [...emails, ...csvEmails];
-      }
-      setManualEmails(emails.join(", "));
-    })();
-  }, [campaignId]);
+React.useEffect(() => {
+  if (!campaignId || contactLists.length === 0) return;
 
+  (async () => {
+    const c = await getCampaignById(campaignId);
+    setCampaignName(c.campaignName || "");
+    setSubject(c.subject || "");
+    setEmailContent(c.htmlContent || "");
+    setRawText(c.htmlContent || "");
+    setSelectedProjectId(c.projectId);
+    setSelectedTemplateId(c.templateId);
 
+    if (c.csvContent) {
+      setCsvContent(c.csvContent);
+      setCsvFileName("Previously uploaded CSV");
+      const parsed = Papa.parse(c.csvContent, { header: true });
+      setParsedCsvRows(parsed.data);
+    }
+
+    if (c.contacts && Array.isArray(c.contacts)) {
+      // Use exactly the saved contacts to preserve FirstName/LastName
+      setSelectedListContacts(c.contacts);
+
+      // For manual emails, extract contacts that have only email (no name)
+      const manualEmailsArray = c.contacts
+        .filter(contact => !contact.firstName && !contact.lastName)
+        .map(contact => contact.email);
+
+      setManualEmails(manualEmailsArray.join(", "));
+    }
+
+  })();
+}, [campaignId, contactLists]);
 
 
   const handleGenerateWithAI = async () => {
@@ -314,7 +324,25 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
 
 
       if (attachmentFile) {
-        formData.append("attachment", attachmentFile);
+        if (attachmentFile instanceof File) {
+          formData.append("attachment", attachmentFile);
+        } else if (typeof attachmentFile === "string") {
+          const backendURL = "http://172.236.172.122:5000";
+          // http://172.236.172.122:5000  http://localhost:5000
+          const url = `${backendURL}${attachmentFile.startsWith("/") ? "" : "/"}${attachmentFile}`;
+
+          // Fetch the file as blob
+          const response = await fetch(url);
+          const blob = await response.blob();
+
+          // Get filename from the URL (or fallback to 'attachment.pdf')
+          const fileName = attachmentFile.split("/").pop() || "attachment.pdf";
+
+          // Convert blob to File object
+          const fileFromTemplate = new File([blob], fileName, { type: blob.type });
+
+          formData.append("attachment", fileFromTemplate);
+        }
       }
 
       const result = await sendCampaign(formData);
@@ -377,6 +405,8 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
     const list = contactLists.find((l) => l._id === listId);
     if (list) {
       setSelectedListContacts(list.contacts);
+      console.log("📋 Selected List Contacts:", list.contacts); // <-- Add this here
+
     }
   };
 
@@ -527,7 +557,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedListContacts.map((contact, i) => (
+                    {selectedListContacts.slice(0, 10).map((contact, i) => (
                       <tr key={i} className="odd:bg-muted/30 even:bg-muted/10">
                         <td className="px-3 py-1 border-b">{contact.firstName || "-"}</td>
                         <td className="px-3 py-1 border-b">{contact.lastName || "-"}</td>
@@ -537,12 +567,16 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
                   </tbody>
                 </table>
                 <p className="text-xs px-2 pt-1 text-muted-foreground">
-                  Showing {selectedListContacts.length} contacts from selected list.
+                  Showing first 10 contacts from selected list.
+                  <button
+                    className="text-blue-500 underline ml-2"
+                    onClick={() => setShowFullContactListDialog(true)}
+                  >
+                    View All
+                  </button>
                 </p>
               </div>
             )}
-
-
 
             <div className="space-y-2">
               <Label htmlFor="manual-emails">Add Email(s) Manually</Label>
@@ -564,6 +598,36 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
                 onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
               />
             </div>
+
+            {attachmentFile && (
+              <div className="flex flex-col items-center gap-2 mt-2">
+                <p className="text-sm truncate text-center">
+                  {attachmentFile instanceof File ? attachmentFile.name : attachmentFile.split("/").pop()}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (attachmentFile instanceof File) {
+                      const url = URL.createObjectURL(attachmentFile);
+                      window.open(url, "_blank");
+                    } else if (typeof attachmentFile === "string") {
+                      const backendURL = "http://172.236.172.122:5000";
+
+                      // http://172.236.172.122:5000   http://localhost:5000
+                      const url = `${backendURL}${attachmentFile.startsWith("/") ? "" : "/"}${attachmentFile}`;
+                      window.open(url, "_blank");
+                    } else {
+                      alert("Attachment preview is not available.");
+                    }
+                  }}
+                >
+                  <Eye className="w-4 h-4 mr-1" />
+                  View Attachment
+                </Button>
+              </div>
+            )}
+
 
             {parsedCsvRows.length > 0 && (
               <>
@@ -597,6 +661,36 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
                   </p>
                 </div>
 
+
+                <Dialog open={showFullContactListDialog} onOpenChange={setShowFullContactListDialog}>
+                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+                    <DialogHeader>
+                      <DialogTitle>Full Contact List Preview</DialogTitle>
+                    </DialogHeader>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full text-sm text-left table-auto border-collapse">
+                        <thead className="bg-muted sticky top-0">
+                          <tr>
+                            <th className="px-3 py-2 border-b font-semibold">First Name</th>
+                            <th className="px-3 py-2 border-b font-semibold">Last Name</th>
+                            <th className="px-3 py-2 border-b font-semibold">Email</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedListContacts.map((contact, i) => (
+                            <tr key={i} className="odd:bg-muted/30 even:bg-muted/10">
+                              <td className="px-3 py-1 border-b">{contact.firstName || "-"}</td>
+                              <td className="px-3 py-1 border-b">{contact.lastName || "-"}</td>
+                              <td className="px-3 py-1 border-b">{contact.email}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+
                 <Dialog open={showFullCsvDialog} onOpenChange={setShowFullCsvDialog}>
                   <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
                     <DialogHeader><DialogTitle>Full CSV/XLSX Preview</DialogTitle></DialogHeader>
@@ -624,6 +718,8 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
                 </Dialog>
               </>
             )}
+
+
 
           </CardContent>
         </Card>

@@ -33,7 +33,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 
 const statusConfig: Record<Campaign['status'], { className: string }> = {
@@ -81,8 +80,6 @@ export default function CampaignsPage() {
     }
   };
 
-
-
   return (
     <div>
       <PageHeader title="Campaigns" description="Create and manage your email campaigns.">
@@ -106,6 +103,10 @@ export default function CampaignsPage() {
                 <TableHead>Campaign Name</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Recipients</TableHead>
+                <TableHead>Opens</TableHead>
+                <TableHead>Clicks</TableHead>
+                <TableHead>Open Rate</TableHead>
+                <TableHead>Click Rate</TableHead>
                 <TableHead>Created By</TableHead>
                 <TableHead>Created Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -113,43 +114,60 @@ export default function CampaignsPage() {
             </TableHeader>
             <TableBody>
               {campaigns.length > 0 ? (
-                campaigns.map((campaign) => (
-                  <TableRow key={campaign._id}>
-                    <TableCell className="font-medium">{campaign.campaignName}</TableCell>
-                    <TableCell>
-                      <Badge className={statusConfig[campaign.status]?.className}>
-                        {campaign.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{campaign.recipients || 0}</TableCell>
-                    <TableCell>{campaign.createdBy?.name || '-'}</TableCell>
-                    <TableCell>
-                      {campaign.createdDate
-                        ? format(new Date(campaign.createdDate), "PPP 'at' p")
-                        : 'N/A'}
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Link href={`/dashboard/campaigns/${campaign._id}/edit`}>
-                        <Button variant="outline" size="sm">
-                          Edit
+                campaigns.map((campaign) => {
+                  const recipients = campaign.recipients || 0;
+                  const opens = campaign.stats?.opened || 0;
+                  const clicks = campaign.stats?.clicks || 0;
+
+                  const openRate = recipients > 0 ? ((opens / recipients) * 100).toFixed(1) + '%' : '0%';
+                  const clickRate = opens > 0 ? ((clicks / opens) * 100).toFixed(1) + '%' : '0%';
+
+                  return (
+                    <TableRow key={campaign._id}>
+                      <TableCell className="font-medium">{campaign.campaignName}</TableCell>
+                      <TableCell>
+                        <Badge className={statusConfig[campaign.status]?.className}>
+                          {campaign.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{recipients}</TableCell>
+                      <TableCell>{opens}</TableCell>
+                      <TableCell>{clicks}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{openRate}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{clickRate}</Badge>
+                      </TableCell>
+                      <TableCell>{campaign.createdBy?.name || '-'}</TableCell>
+                      <TableCell>
+                        {campaign.createdDate
+                          ? format(new Date(campaign.createdDate), "PPP 'at' p")
+                          : 'N/A'}
+                      </TableCell>
+                      <TableCell className="text-right space-x-2">
+                        <Link href={`/dashboard/campaigns/${campaign._id}/edit`}>
+                          <Button variant="outline" size="sm">
+                            Edit
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            setDeleteId(campaign._id);
+                            setOpen(true);
+                          }}
+                        >
+                          Delete
                         </Button>
-                      </Link>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => {
-                          setDeleteId(campaign._id);
-                          setOpen(true);
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center">
+                  <TableCell colSpan={10} className="text-center">
                     No campaigns found.
                   </TableCell>
                 </TableRow>
@@ -159,7 +177,6 @@ export default function CampaignsPage() {
         </CardContent>
       </Card>
 
-      {/* 🧾 Delete Confirmation Modal */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>

@@ -25,10 +25,15 @@ export interface Template {
 }
 
 export interface Campaign {
-  id:string;
-  name: string;
+  _id: string;
+  campaignName: string;
   status: 'Sent' | 'Active' | 'Draft' | 'Failed';
-  recipients: number | 'Ongoing';
-  createdBy: string;
-  createdDate: string; // Date string or 'N/A'
+  recipients: number;
+  createdBy?: { name: string };
+  createdDate: string;
+  stats?: {
+    opened: number;
+    clicks: number;
+  };
 }
+

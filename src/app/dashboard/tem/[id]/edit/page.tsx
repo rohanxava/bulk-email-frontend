@@ -165,7 +165,7 @@ export default function EditTemplatePage() {
                                 <Label>Current Attachment (PDF)</Label>
                                 <div className="mt-2">
                                     <a
-                                        href={`http://localhost:5000${form.attachment}`}
+                                        href={`http://172.236.172.122:5000${form.attachment}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1 px-1 py-1 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200"
