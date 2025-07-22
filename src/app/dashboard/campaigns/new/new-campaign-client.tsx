@@ -327,7 +327,7 @@ React.useEffect(() => {
         if (attachmentFile instanceof File) {
           formData.append("attachment", attachmentFile);
         } else if (typeof attachmentFile === "string") {
-          const backendURL = "http://172.236.172.122:5000";
+          const backendURL = "https://172.236.172.122:5000";
           // http://172.236.172.122:5000  http://localhost:5000
           const url = `${backendURL}${attachmentFile.startsWith("/") ? "" : "/"}${attachmentFile}`;
 
@@ -612,7 +612,7 @@ React.useEffect(() => {
                       const url = URL.createObjectURL(attachmentFile);
                       window.open(url, "_blank");
                     } else if (typeof attachmentFile === "string") {
-                      const backendURL = "http://172.236.172.122:5000";
+                      const backendURL = "https://172.236.172.122:5000";
 
                       // http://172.236.172.122:5000   http://localhost:5000
                       const url = `${backendURL}${attachmentFile.startsWith("/") ? "" : "/"}${attachmentFile}`;
