@@ -66,6 +66,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
   const [attachmentFile, setAttachmentFile] = React.useState<File | null>(null);
   const [prompt, setPrompt] = React.useState("");
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const [scheduleDate, setScheduleDate] = React.useState<string>("");
   const [projects, setProjects] = React.useState<Project[]>([]);
   const [templates, setTemplates] = React.useState<Template[]>([]);
   const [campaignName, setCampaignName] = React.useState("");
@@ -179,39 +180,39 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
     }
   }, [selectedTemplateId, templates]);
 
-React.useEffect(() => {
-  if (!campaignId || contactLists.length === 0) return;
+  React.useEffect(() => {
+    if (!campaignId || contactLists.length === 0) return;
 
-  (async () => {
-    const c = await getCampaignById(campaignId);
-    setCampaignName(c.campaignName || "");
-    setSubject(c.subject || "");
-    setEmailContent(c.htmlContent || "");
-    setRawText(c.htmlContent || "");
-    setSelectedProjectId(c.projectId);
-    setSelectedTemplateId(c.templateId);
+    (async () => {
+      const c = await getCampaignById(campaignId);
+      setCampaignName(c.campaignName || "");
+      setSubject(c.subject || "");
+      setEmailContent(c.htmlContent || "");
+      setRawText(c.htmlContent || "");
+      setSelectedProjectId(c.projectId);
+      setSelectedTemplateId(c.templateId);
 
-    if (c.csvContent) {
-      setCsvContent(c.csvContent);
-      setCsvFileName("Previously uploaded CSV");
-      const parsed = Papa.parse(c.csvContent, { header: true });
-      setParsedCsvRows(parsed.data);
-    }
+      if (c.csvContent) {
+        setCsvContent(c.csvContent);
+        setCsvFileName("Previously uploaded CSV");
+        const parsed = Papa.parse(c.csvContent, { header: true });
+        setParsedCsvRows(parsed.data);
+      }
 
-    if (c.contacts && Array.isArray(c.contacts)) {
-      // Use exactly the saved contacts to preserve FirstName/LastName
-      setSelectedListContacts(c.contacts);
+      if (c.contacts && Array.isArray(c.contacts)) {
+        // Use exactly the saved contacts to preserve FirstName/LastName
+        setSelectedListContacts(c.contacts);
 
-      // For manual emails, extract contacts that have only email (no name)
-      const manualEmailsArray = c.contacts
-        .filter(contact => !contact.firstName && !contact.lastName)
-        .map(contact => contact.email);
+        // For manual emails, extract contacts that have only email (no name)
+        const manualEmailsArray = c.contacts
+          .filter(contact => !contact.firstName && !contact.lastName)
+          .map(contact => contact.email);
 
-      setManualEmails(manualEmailsArray.join(", "));
-    }
+        setManualEmails(manualEmailsArray.join(", "));
+      }
 
-  })();
-}, [campaignId, contactLists]);
+    })();
+  }, [campaignId, contactLists]);
 
 
   const handleGenerateWithAI = async () => {
@@ -321,6 +322,8 @@ React.useEffect(() => {
       formData.append("projectId", selectedProjectId);
       formData.append("templateId", selectedTemplateId);
       formData.append("listContacts", JSON.stringify(selectedListContacts));
+      formData.append("scheduleDate", scheduleDate); // can be empty string
+
 
 
       if (attachmentFile) {
@@ -328,7 +331,7 @@ React.useEffect(() => {
           formData.append("attachment", attachmentFile);
         } else if (typeof attachmentFile === "string") {
           const backendURL = "https://bulkmail.xavawebservices.com";
-          // http://172.236.172.122:5000  http://localhost:5000
+          // http://localhost:5000
           const url = `${backendURL}${attachmentFile.startsWith("/") ? "" : "/"}${attachmentFile}`;
 
           // Fetch the file as blob
@@ -405,7 +408,7 @@ React.useEffect(() => {
     const list = contactLists.find((l) => l._id === listId);
     if (list) {
       setSelectedListContacts(list.contacts);
-      console.log("📋 Selected List Contacts:", list.contacts); // <-- Add this here
+      console.log("📋 Selected List Contacts:", list.contacts);
 
     }
   };
@@ -437,6 +440,18 @@ React.useEffect(() => {
             <div className="space-y-2">
               <Label>Sender Email</Label>
               <p className="border rounded px-3 py-2 bg-muted text-sm">{selectedProject?.fromEmail || "N/A"}</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Schedule Time (Optional)</Label>
+              <Input
+                type="datetime-local"
+                value={scheduleDate}
+                onChange={(e) => setScheduleDate(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Leave blank to send immediately.
+              </p>
             </div>
 
             <div className="space-y-2"><Label>Campaign Name</Label><Input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} /></div>
@@ -508,6 +523,19 @@ React.useEffect(() => {
           </CardContent>
         </Card>
       </div>
+
+      {/* <div className="space-y-2">
+        <Label>Schedule Time (Optional)</Label>
+        <Input
+          type="datetime-local"
+          value={scheduleDate}
+          onChange={(e) => setScheduleDate(e.target.value)}
+        />
+        <p className="text-xs text-muted-foreground">
+          Leave blank to send immediately.
+        </p>
+      </div> */}
+
 
       {/* Right Side */}
       <div className="space-y-6">
@@ -614,7 +642,7 @@ React.useEffect(() => {
                     } else if (typeof attachmentFile === "string") {
                       const backendURL = "https://bulkmail.xavawebservices.com";
 
-                      // http://172.236.172.122:5000   http://localhost:5000
+                      //   http://localhost:5000
                       const url = `${backendURL}${attachmentFile.startsWith("/") ? "" : "/"}${attachmentFile}`;
                       window.open(url, "_blank");
                     } else {
