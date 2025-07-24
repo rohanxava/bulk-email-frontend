@@ -448,7 +448,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
               <p className="border rounded px-3 py-2 bg-muted text-sm">{selectedProject?.fromEmail || "N/A"}</p>
             </div>
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label>Schedule Time (Optional)</Label>
               <Input
                 type="datetime-local"
@@ -458,7 +458,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
               <p className="text-xs text-muted-foreground">
                 Leave blank to send immediately.
               </p>
-            </div>
+            </div> */}
 
             <div className="space-y-2"><Label>Campaign Name</Label><Input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} /></div>
 
