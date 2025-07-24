@@ -351,18 +351,24 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
       const result = await sendCampaign(formData);
 
       if (result.success) {
+        const isScheduled = result.scheduled || !!scheduleDate;
+
         toast({
-          title: "Campaign Sent",
-          description: `${result.emailsSent} emails sent successfully.`,
+          title: isScheduled ? "Campaign Scheduled" : "Campaign Sent",
+          description: isScheduled
+            ? `${result.emailsScheduled || result.emailsSent || 0} emails will be sent at your selected time.`
+            : `${result.emailsSent} emails sent successfully.`,
         });
+
         router.push("/dashboard/campaigns");
       } else {
         toast({
           title: "Failed",
-          description: result.error,
+          description: result.error || "Something went wrong.",
           variant: "destructive",
         });
       }
+
 
     } catch (err) {
       console.error(err);
@@ -442,7 +448,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
               <p className="border rounded px-3 py-2 bg-muted text-sm">{selectedProject?.fromEmail || "N/A"}</p>
             </div>
 
-            {/* <div className="space-y-2">
+            <div className="space-y-2">
               <Label>Schedule Time (Optional)</Label>
               <Input
                 type="datetime-local"
@@ -452,7 +458,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
               <p className="text-xs text-muted-foreground">
                 Leave blank to send immediately.
               </p>
-            </div> */}
+            </div>
 
             <div className="space-y-2"><Label>Campaign Name</Label><Input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} /></div>
 
@@ -617,7 +623,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
               />
             </div>
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="attachment">Attach PDF (optional)</Label>
               <Input
                 id="attachment"
@@ -625,7 +631,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
                 accept="application/pdf"
                 onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
               />
-            </div>
+            </div> */}
 
             {attachmentFile && (
               <div className="flex flex-col items-center gap-2 mt-2">
