@@ -93,7 +93,10 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
   const [showFullContactListDialog, setShowFullContactListDialog] = React.useState(false);
   const [linkText, setLinkText] = React.useState("");
 
+
   const selectedProject = projects.find((p) => p._id === selectedProjectId);
+
+// console.log("selected",selectedProject);
 
   const wrapSelectedText = (startTag: string, endTag: string) => {
     const textarea = rawTextRef.current;
@@ -154,42 +157,19 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
       setProjects(proj);
     })();
   }, []);
-
+  
+  
   React.useEffect(() => {
-    if (!selectedProjectId) return setTemplates([]);
-    (async () => {
-      try {
-        const tmpl = await getTemplates(selectedProjectId);
-        setTemplates(tmpl);
-      } catch (err: any) {
-        toast({ title: "Error", description: err.message, variant: "destructive" });
-      }
-    })();
-  }, [selectedProjectId]);
-
-  React.useEffect(() => {
-    if (!selectedTemplateId) return;
-    const t = templates.find((x) => x._id === selectedTemplateId);
-    console.log("📄 Selected Template Details:", t); // <-- Console log added
-
-    if (t) {
-      setSubject(t.subject);
-      setEmailContent(t.htmlContent);
-      setRawText(t.htmlContent);
-      setAttachmentFile(t.attachment);
-    }
-  }, [selectedTemplateId, templates]);
-
-  React.useEffect(() => {
-    if (!campaignId || contactLists.length === 0) return;
-
+    if (!campaignId || contactLists.length === 0 || projects.length === 0) return;
+    
     (async () => {
       const c = await getCampaignById(campaignId);
+      console.log("hjjkil",c);
       setCampaignName(c.campaignName || "");
       setSubject(c.subject || "");
       setEmailContent(c.htmlContent || "");
       setRawText(c.htmlContent || "");
-      setSelectedProjectId(c.projectId);
+      setSelectedProjectId(c.projectId);  
       setSelectedTemplateId(c.templateId);
 
       if (c.csvContent) {
@@ -198,21 +178,46 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
         const parsed = Papa.parse(c.csvContent, { header: true });
         setParsedCsvRows(parsed.data);
       }
-
+      
       if (c.contacts && Array.isArray(c.contacts)) {
-        // Use exactly the saved contacts to preserve FirstName/LastName
         setSelectedListContacts(c.contacts);
-
-        // For manual emails, extract contacts that have only email (no name)
         const manualEmailsArray = c.contacts
-          .filter(contact => !contact.firstName && !contact.lastName)
-          .map(contact => contact.email);
-
+        .filter(contact => !contact.firstName && !contact.lastName)
+        .map(contact => contact.email);
         setManualEmails(manualEmailsArray.join(", "));
       }
-
+      
+      if (c.scheduleDate) {
+        setScheduleDate(new Date(c.scheduleDate).toISOString().slice(0, 16));
+      }
     })();
-  }, [campaignId, contactLists]);
+  }, [campaignId, contactLists, projects]);
+  
+  
+    React.useEffect(() => {
+      if (!selectedProjectId) return setTemplates([]);
+      (async () => {
+        try {
+          const tmpl = await getTemplates(selectedProjectId);
+          setTemplates(tmpl);
+        } catch (err: any) {
+          toast({ title: "Error", description: err.message, variant: "destructive" });
+        }
+      })();
+    }, [selectedProjectId]);
+  
+    React.useEffect(() => {
+      if (!selectedTemplateId) return;
+      const t = templates.find((x) => x._id === selectedTemplateId);
+      console.log("📄 Selected Template Details:", t); // <-- Console log added
+  
+      if (t) {
+        setSubject(t.subject);
+        setEmailContent(t.htmlContent);
+        setRawText(t.htmlContent);
+        setAttachmentFile(t.attachment);
+      }
+    }, [selectedTemplateId, templates]);
 
 
   const handleGenerateWithAI = async () => {

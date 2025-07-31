@@ -79,7 +79,6 @@ export default function CampaignsPage() {
       setOpen(false);
     }
   };
-
   return (
     <div>
       <PageHeader title="Campaigns" description="Create and manage your email campaigns.">
@@ -146,6 +145,8 @@ export default function CampaignsPage() {
                           : 'N/A'}
                       </TableCell>
                       <TableCell className="text-right space-x-2">
+                        {/* console.log("Campaign ID in Link:", campaign._id); */}
+
                         <Link href={`/dashboard/campaigns/${campaign._id}/edit`}>
                           <Button variant="outline" size="sm">
                             Edit
