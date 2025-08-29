@@ -322,7 +322,7 @@ export function NewCampaignClient({ campaignId }: NewCampaignClientProps) {
       formData.append("csvContent", csvContent || "");
       formData.append("manualEmails", allEmails.join(","));
       formData.append("fromEmail", fromEmail);
-      formData.append("sendgridKey", proj.sendgridKey!);
+      formData.append("apiKey", proj.apiKey);
       formData.append("createdBy", userId);
       formData.append("projectId", selectedProjectId);
       formData.append("templateId", selectedTemplateId);
